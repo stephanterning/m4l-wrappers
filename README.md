@@ -2,6 +2,16 @@
 
 Standalone Max for Live audio effects for controlling installed plug-ins from Ableton Live’s Device View. The first two devices host the VST3 editions of Wavesfactory Spectre and Sonnox Oxford Inflator. Both macOS externals build for Apple Silicon and Intel.
 
+## Spectre Wrapper
+
+![Spectre Wrapper in Ableton Live with five saturation bands and band 4 selected](docs/images/spectre.png)
+
+## Oxford Inflator Wrapper
+
+![Oxford Inflator Wrapper in Ableton Live with Drive Link and Band Split enabled](docs/images/oxford-inflator.png)
+
+Shown with the optional Oxford skin. The default build uses a drawn panel with the same controls.
+
 ## Build on macOS
 
 Install Xcode Command Line Tools, Python 3.9 or later and Git. From the repository root:
