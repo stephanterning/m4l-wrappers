@@ -4,13 +4,15 @@ Standalone Max for Live audio effects for controlling installed plug-ins from Ab
 
 ## Spectre Wrapper
 
+Download: https://maxforlive.com/library/device/17366/spectre-wrapper
+
 ![Spectre Wrapper in Ableton Live with five saturation bands and band 4 selected](docs/images/spectre.png)
 
 ## Oxford Inflator Wrapper
 
-![Oxford Inflator Wrapper in Ableton Live with Drive Link and Band Split enabled](docs/images/oxford-inflator.png)
+Download: https://maxforlive.com/library/device/17365/oxford-inflator-wrapper
 
-Shown with the optional Oxford skin. The default build uses a drawn panel with the same controls.
+![Oxford Inflator Wrapper in Ableton Live with Drive Link and Band Split enabled](docs/images/oxford-inflator.png)
 
 ## Build on macOS
 
