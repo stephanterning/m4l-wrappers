@@ -1,0 +1,10 @@
+{
+  "name": "Oxford Inflator Wrapper",
+  "external": "oxfordinflatorpeak~",
+  "resources": {
+    "oxford-surface.png": "devices/oxford-inflator/oxford-surface.png",
+    "oxford-transparent.js": "shared/transparent.js",
+    "oxford-meter-peak.js": "shared/meter-ui.js",
+    "oxford-panel-v1.js": "devices/oxford-inflator/oxford-panel-v1.js"
+  }
+}

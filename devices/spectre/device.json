@@ -1,0 +1,9 @@
+{
+  "name": "Spectre Wrapper",
+  "external": "spectrewrapper~",
+  "resources": {
+    "spectre-bands-v1.js": "devices/spectre/spectre-bands-v1.js",
+    "spectre-meter-v1.js": "shared/meter-ui.js",
+    "spectre-transparent.js": "shared/transparent.js"
+  }
+}

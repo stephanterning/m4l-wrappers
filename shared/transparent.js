@@ -1,0 +1,2 @@
+mgraphics.init();
+function paint(){}
