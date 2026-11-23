@@ -1,0 +1,22 @@
+name: Fetch wrapper SDKs
+description: Fetch the pinned Steinberg and Cycling '74 sources used by both platforms
+runs:
+  using: composite
+  steps:
+    - name: Check out VST3 SDK
+      uses: actions/checkout@v4
+      with:
+        repository: steinbergmedia/vst3sdk
+        ref: 3cdf9ca5d1f5b1b21e0a86832aa4abe55607bd96
+        path: deps/vst3sdk
+        persist-credentials: false
+    - name: Initialize VST3 SDK components
+      shell: bash
+      run: git -C deps/vst3sdk submodule update --init --depth 1 pluginterfaces base cmake public.sdk
+    - name: Check out Max SDK
+      uses: actions/checkout@v4
+      with:
+        repository: Cycling74/max-sdk-base
+        ref: c03a2922a2a8ff149165a1e2ea134e9321d6e202
+        path: deps/max-sdk-base
+        persist-credentials: false

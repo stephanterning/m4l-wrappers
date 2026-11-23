@@ -1,5 +1,9 @@
 #pragma once
+#if defined(_WIN32)
+#include <emmintrin.h>
+#else
 #include <simd/simd.h>
+#endif
 #include <array>
 #include <algorithm>
 #include <cmath>
@@ -10,7 +14,33 @@ struct MeterReading {
 };
 
 class StereoMeters {
+#if defined(_WIN32)
+    // Two SSE2 stereo pairs fit the baseline Windows x64 instruction set.
+    struct Signal {
+        __m128d in{}, out{};
+        Signal() = default;
+        Signal(__m128d a,__m128d b):in(a),out(b){}
+        Signal(double l,double r,double ol,double or_):in(_mm_set_pd(r,l)),out(_mm_set_pd(or_,ol)){}
+        friend Signal operator+(Signal a,Signal b){return {_mm_add_pd(a.in,b.in),_mm_add_pd(a.out,b.out)};}
+        friend Signal operator-(Signal a,Signal b){return {_mm_sub_pd(a.in,b.in),_mm_sub_pd(a.out,b.out)};}
+        friend Signal operator*(Signal a,Signal b){return {_mm_mul_pd(a.in,b.in),_mm_mul_pd(a.out,b.out)};}
+        friend Signal operator*(double a,Signal b){const auto g=_mm_set1_pd(a);return {_mm_mul_pd(g,b.in),_mm_mul_pd(g,b.out)};}
+        Signal& operator+=(Signal b){*this=*this+b;return *this;}
+        double operator[](int index)const{
+            const __m128d pair=index<2?in:out;
+            return _mm_cvtsd_f64((index&1)?_mm_unpackhi_pd(pair,pair):pair);
+        }
+    };
+    static Signal maximum(Signal a,Signal b){return {_mm_max_pd(a.in,b.in),_mm_max_pd(a.out,b.out)};}
+    static Signal magnitude(Signal a){
+        const auto sign=_mm_set1_pd(-0.);
+        return {_mm_andnot_pd(sign,a.in),_mm_andnot_pd(sign,a.out)};
+    }
+#else
     using Signal=simd_double4;
+    static Signal maximum(Signal a,Signal b){return simd::max(a,b);}
+    static Signal magnitude(Signal a){return simd::abs(a);}
+#endif
     static constexpr int segments=300;
     static constexpr double pi=3.14159265358979323846;
     struct Biquad {
@@ -68,7 +98,7 @@ public:
             const auto k=highpass.process(shelf.process(frame));
             partial.power+=frame*frame;
             partial.weighted+=k*k;
-            partial.peak=simd::max(partial.peak,simd::abs(frame));
+            partial.peak=maximum(partial.peak,magnitude(frame));
             if(++frames!=chunkFrames)continue;
             frames=0;
             power+=partial.power-history[head].power;
@@ -88,7 +118,7 @@ public:
         result.valid=filled==segments;
         if(!result.valid)return result;
         Signal peak{};
-        for(const auto& slice:history)peak=simd::max(peak,slice.peak);
+        for(const auto& slice:history)peak=maximum(peak,slice.peak);
         const double samples=windowFrames();
         for(int side=0;side<2;side++){
             const int i=2*side;

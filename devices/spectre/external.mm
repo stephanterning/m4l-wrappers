@@ -87,20 +87,28 @@ static void releasePlugin(Device* d){
     if(old)old->shutdown();
 }
 static void loadOnMain(Device* d,t_symbol*,long argc,t_atom* args){
-    @autoreleasepool {
+#if defined(__APPLE__)
+    @autoreleasepool
+#endif
+    {
         if(argc!=1||atom_gettype(args)!=A_SYM)return;
-        NSString* encoded=[NSString stringWithUTF8String:atom_getsym(args)->s_name];
-        NSData* state=[[NSData alloc] initWithBase64EncodedString:encoded options:0];
+        const std::string encoded=atom_getsym(args)->s_name;
+        const PluginState state=decodePluginState(encoded);
         releasePlugin(d);
-        NSArray<NSString*>* candidates=spectrePaths();
+        std::vector<std::string> candidates;
+        try {
+            candidates=spectrePaths();
+        } catch(const std::filesystem::filesystem_error&) {
+            reportLoadFailure((t_object*)d,d->events,true,"The VST3 host could not search the plug-in folders.");
+            return;
+        }
         bool found=false;
         std::string error;
-        for(NSString* path in candidates){
-            if(![[NSFileManager defaultManager] fileExistsAtPath:path])continue;
+        for(const auto& path:candidates){
             found=true;
             auto fresh=owned(new Spectre([d]{qelem_set(d->queue);}));
-            if(!fresh->open([path fileSystemRepresentation],error)){fresh->shutdown();continue;}
-            if(![encoded isEqualToString:@"-"] && (!state.length || !fresh->recall(state))){
+            if(!fresh->open(path,error)){fresh->shutdown();continue;}
+            if(encoded!="-" && (state.empty() || !fresh->recall(state))){
                 fresh->shutdown();
                 error="The plug-in could not restore the saved settings for this instance.";
                 continue;
@@ -127,9 +135,9 @@ static void show(Device* d){
 static void snapshot(Device* d){
     if(!systhread_ismainthread()){defer_low(d,(method)snapshot,nullptr,0,nullptr);return;}
     if(auto e=d->core->instance){
-        NSData* bytes=e->state();if(!bytes||bytes.length>8192)return;
-        NSString* encoded=[bytes base64EncodedStringWithOptions:0];
-        t_atom out;atom_setsym(&out,gensym(encoded.UTF8String));
+        auto bytes=e->state();if(bytes.empty()||bytes.size()>8192)return;
+        const auto encoded=encodePluginState(bytes);
+        t_atom out;atom_setsym(&out,gensym(encoded.c_str()));
         outlet_anything(d->events,gensym("plugstate"),1,&out);
     }
 }
@@ -208,7 +216,7 @@ static void* create(){
     dsp_setup((t_pxobject*)d,2);d->obj.z_misc|=Z_NO_INPLACE;
     d->events=outlet_new(d,nullptr);outlet_new(d,"signal");outlet_new(d,"signal");return d;
 }
-extern "C" __attribute__((visibility("default"))) void ext_main(void*){
+extern "C" void C74_EXPORT ext_main(void*){
     type=class_new("spectrewrapper~",(method)create,(method)destroy,sizeof(Device),nullptr,0);
     class_addmethod(type,(method)load,"load",A_GIMME,0);class_addmethod(type,(method)setParam,"param",A_GIMME,0);
     class_addmethod(type,(method)show,"open",0);class_addmethod(type,(method)dsp,"dsp64",A_CANT,0);

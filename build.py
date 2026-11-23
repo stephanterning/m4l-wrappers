@@ -1,4 +1,5 @@
-"""Build the shared macOS host sources and freeze each Max for Live device."""
+"""Build the macOS externals and freeze the device with its requested platform binaries."""
+import argparse
 import concurrent.futures
 import io
 import json
@@ -7,7 +8,6 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
-import sys
 import time
 import zipfile
 
@@ -56,7 +56,19 @@ def be(number):
 def record(tag, data):
     return tag+be(len(data)+8)+data
 
-def freeze(bundle, patch, path, assets):
+def windows_external(directory, name):
+    path = directory / (name + ".mxe64")
+    data = path.read_bytes()
+    # Reject a wrong architecture or an ordinary EXE before producing a release.
+    pe = int.from_bytes(data[60:64], "little")
+    if (data[:2] != b"MZ" or data[pe:pe+6] != b"PE\0\0\x64\x86"
+            or data[pe+24:pe+26] != b"\x0b\x02"
+            or not int.from_bytes(data[pe+22:pe+24], "little") & 0x2000):
+        raise ValueError(f"Expected a Windows x64 DLL at {path}")
+    return data
+
+
+def freeze(bundle, patch, path, assets, windows_binary=None):
     EXTERNAL = bundle.stem
     contents=bundle/"Contents"
     zipdata=io.BytesIO()
@@ -72,6 +84,9 @@ def freeze(bundle, patch, path, assets):
         (EXTERNAL+"/plist",bytes(4),(contents/"Info.plist").read_bytes())]
     for f in sorted((contents/"Resources").glob("*")):
         if f.is_file():resources.append((EXTERNAL+"/resfile/"+f.name,bytes(4),f.read_bytes()))
+    if windows_binary is not None:
+        # Max stores Windows externals as raw DLL bytes in a top-level mx64 entry.
+        resources.append((EXTERNAL + ".mxe64", b"mx64", windows_binary))
     data=bytearray();index=bytearray();now=int(time.time())+2082844800
     for ix,(name,kind,contents) in enumerate(resources):
         offset=16+len(data);data.extend(contents);name=name.encode()+b'\0';name+=b'\0'*(-len(name)%4)
@@ -83,7 +98,7 @@ def freeze(bundle, patch, path, assets):
     tmp.replace(path)
 
 
-def build_device(device):
+def build_device(device, windows_binary=None):
     config = json.loads((device / "device.json").read_text())
     name = config["external"]
     bundle = BUILD / device.name / (name + ".mxo")
@@ -124,10 +139,21 @@ def build_device(device):
         else:
             del assets["oxford-surface.png"]
             patch["boxes"] = [row for row in patch["boxes"] if row["box"].get("varname") != "panelResource"]
-    freeze(bundle, patch, output, assets)
+    freeze(bundle, patch, output, assets, windows_binary)
     print(output)
 
 if __name__ == "__main__":
     devices = ROOT / "devices"
-    for device in ([devices / arg for arg in sys.argv[1:]] or sorted(devices.iterdir())):
-        build_device(device)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("devices", nargs="*", help="Device directories to build (defaults to all)")
+    parser.add_argument("--windows-externals", type=Path, metavar="DIR",
+                        help="Also embed each Windows x64 .mxe64 from DIR")
+    args = parser.parse_args()
+    selected = [devices / name for name in args.devices] or sorted(devices.iterdir())
+    binaries = {}
+    if args.windows_externals is not None:
+        for device in selected:
+            config = json.loads((device / "device.json").read_text())
+            binaries[device] = windows_external(args.windows_externals, config["external"])
+    for device in selected:
+        build_device(device, binaries.get(device))
