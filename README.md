@@ -34,11 +34,11 @@ Existing SDK checkouts can be selected with `VST3_SDK` and `MAX_SDK_BASE`. Run `
 
 Each directory under `devices/` owns its editable Max patch, controller, panel, native host and parameter mapping. The build embeds the controller scripts, UI resources and signed universal Max external in one .amxd per device.
 
-`shared/` contains VST3 module discovery, audio metering, the meter UI, Drive/Output linking, Gain Match and the missing-plugin warning. The warning groups affected tracks by device type and Live Set. Missing instances pass dry audio. Retry repeats discovery and restores the instance when the plug-in is available.
+`shared/` contains VST3 module discovery, audio metering, the meter UI, Drive/Output linking, Gain Match and the missing-plugin warning. The warning groups affected tracks by device type and Live Set. Missing instances pass dry audio. Retry repeats discovery and restores the instance when the plug-in is available. A plug-in that is found but fails to load shows an English load error with the cause.
 
 ## Adding a wrapper
 
-Start with the device closest to the new plug-in. Give its external and saved state distinct identifiers. Identify the plug-in by VST3 class ID, map its published parameter IDs, and negotiate its supported sample format and bus layout. Preserve the identifiers used by released devices so existing Live Sets can recall them.
+Start with the device closest to the new plug-in. Give its external and saved state distinct identifiers. Identify the plug-in by VST3 class ID, map its published parameter IDs, and negotiate its supported sample format and bus layout. Preserve the identifiers used by released devices so existing Live Sets can recall them. The same built .amxd is used locally and for distribution. Each saved instance restores its own Live parameters and plug-in state. Test an update by saving distinct settings in two instances of the previous version, replacing the device file at the same path and reopening the Set.
 
 Run the controller and package checks after building (Node.js required):
 

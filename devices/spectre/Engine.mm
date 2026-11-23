@@ -8,6 +8,7 @@
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/gui/iplugview.h"
+#include "Vst3Parameters.h"
 #include <array>
 #include <atomic>
 #include <algorithm>
@@ -19,15 +20,48 @@ using namespace Steinberg;
 using namespace Steinberg::Vst;
 using VST3::Hosting::Module;
 // VST3 ParamIDs are stable across releases and independent of the controller's display order.
-static constexpr std::array<ParamID,39> ids = {
-    971255197, 971255198, 971255208, 971255210, 971255194, 971255207,
-    730756839, 730756840, 730756850, 730756852, 730756836, 730756849,
-    730757800, 730757801, 730757811, 730757813, 730757797, 730757810,
-    730758761, 730758762, 730758772, 730758774, 730758758, 730758771,
-    84215663, 84215664, 84215674, 84215676, 84215660, 84215673,
-    69820330, 195300609, 2025248219, 2336762, 1369197791, 1333656829, 2372003, 907287315, 1652125811
-};
-static constexpr size_t parameterCount = ids.size();
+static constexpr std::array<Vst3Control,39> controls = {{
+    {971255197, "LowShelf Frequency"},
+    {971255198, "LowShelf Gain"},
+    {971255208, "LowShelf Q"},
+    {971255210, "LowShelf Switch"},
+    {971255194, "LowShelf Color"},
+    {971255207, "LowShelf Processing"},
+    {730756839, "Peak 01 Frequency"},
+    {730756840, "Peak 01 Gain"},
+    {730756850, "Peak 01 Q"},
+    {730756852, "Peak 01 Switch"},
+    {730756836, "Peak 01 Color"},
+    {730756849, "Peak 01 Processing"},
+    {730757800, "Peak 02 Frequency"},
+    {730757801, "Peak 02 Gain"},
+    {730757811, "Peak 02 Q"},
+    {730757813, "Peak 02 Switch"},
+    {730757797, "Peak 02 Color"},
+    {730757810, "Peak 02 Processing"},
+    {730758761, "Peak 03 Frequency"},
+    {730758762, "Peak 03 Gain"},
+    {730758772, "Peak 03 Q"},
+    {730758774, "Peak 03 Switch"},
+    {730758758, "Peak 03 Color"},
+    {730758771, "Peak 03 Processing"},
+    {84215663, "HighShelf Frequency"},
+    {84215664, "HighShelf Gain"},
+    {84215674, "HighShelf Q"},
+    {84215676, "HighShelf Switch"},
+    {84215660, "HighShelf Color"},
+    {84215673, "HighShelf Processing"},
+    {69820330, "Input"},
+    {195300609, "Output"},
+    {2025248219, "Dry Wet"},
+    {2336762, "Input Compensation"},
+    {1369197791, "Quality"},
+    {1333656829, "De-Emphasis"},
+    {2372003, "Mode"},
+    {907287315, "Processing"},
+    {1652125811, "Bypass"},
+}};
+static constexpr size_t parameterCount = controls.size();
 static constexpr uint64_t allParameters = (uint64_t(1) << parameterCount) - 1;
 static constexpr size_t qualityIndex = 34;
 static constexpr size_t deEmphasisIndex = 35;
@@ -57,6 +91,7 @@ class Spectre final : public U::Implements<U::Directly<IComponentHandler,IPlugFr
     std::array<std::vector<float>,2> input32, output32;
     int block=0;
     double rate=0;
+    std::array<ParamID,parameterCount> ids{};
     std::array<std::atomic<double>,parameterCount> pending{};
     std::atomic<uint64_t> dirty{0},editorDirty{0};
     ParameterChanges changes{int32(parameterCount)};
@@ -85,7 +120,12 @@ public:
     }
     ~Spectre() override {shutdown();}
     bool open(const std::string& file,std::string& error){
-        module=getModule(file,error);if(!module)return false;
+        module=getModule(file,error);
+        if(!module){
+            // The SDK may return a localized macOS error. Keep the device message in English.
+            error="The VST3 bundle was found, but its executable or plug-in factory could not be loaded.";
+            return false;
+        }
         const auto& factory=module->getFactory();
         for(const auto& descriptor:factory.classInfos()){
             if(descriptor.ID().toString()!="56535453705472737065637472650000")continue;
@@ -99,17 +139,8 @@ public:
             if(component->getState(&state)==kResultOk){
                 state.seek(0,IBStream::kIBSeekSet,nullptr);controller->setComponentState(&state);
             }
-            uint64_t found = 0;
-            for (int j=0; j<controller->getParameterCount(); ++j) {
-                ParameterInfo param{};
-                if (controller->getParameterInfo(j,param)!=kResultOk) continue;
-                auto position=std::find(ids.begin(),ids.end(),param.id);
-                if (position==ids.end()) continue;
-                size_t i=position-ids.begin();
-                pending[i]=controller->getParamNormalized(param.id);
-                found |= uint64_t(1)<<i;
-            }
-            if(found!=allParameters){error="Required Spectre controls unavailable";return false;}
+            if(!resolveParameters(*controller.get(),controls,38,ids,error))return false;
+            for(size_t i=0;i<ids.size();++i)pending[i]=controller->getParamNormalized(ids[i]);
             if(processor->canProcessSampleSize(kSample32)!=kResultOk){error="32-bit float audio samples unsupported";return false;}
             SpeakerArrangement arrangement=SpeakerArr::kStereo;
             if(processor->setBusArrangements(&arrangement,1,&arrangement,1)!=kResultOk ||

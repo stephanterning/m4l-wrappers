@@ -69,6 +69,13 @@ function advance(ms){
 class LiveAPI {constructor(){this.id=1;}get(){return 0;}}
 ctx=vm.createContext({patcher,Task,LiveAPI,outlet:(n,...args)=>commands.push(args),Date,Math});
 vm.runInContext(boxes.ctrl.code,ctx);
+values.bankState=['none'];
+ctx.load();
+assert.deepEqual(commands.at(-1),['load','-']);
+values.bankState=['symbol','AQI='];
+ctx.load();
+assert.deepEqual(commands.at(-1),['load','AQI=']);
+values.bankState=['none'];
 ctx.initialized();ctx.ready();
 const initial=commands.filter(c=>c[0]==='param').slice(-39);
 assert.equal(initial.length,39);
@@ -104,20 +111,33 @@ for (const extraTracks of [false, true]) {
         outlet:(n,...args)=>commands.push(args)});
     vm.runInContext(boxes.ctrl.code,ctx);
     ctx.load();ctx.missing();
-    if (extraTracks) vm.runInContext('queue.set("d778","MIX PRE-MASTER"); queue.set("d779","Bass")',ctx);
+    if (extraTracks) vm.runInContext('queue.set("d778",JSON.stringify(["MIX PRE-MASTER",""])); queue.set("d779",JSON.stringify(["Bass",""]))',ctx);
     vm.runInContext('queue.set("last",String(Date.now()-1500))',ctx);
     ctx.flush();
     const names = extraTracks ? 'Bass\nMIX PRE-MASTER' : 'Bass';
     assert.deepEqual(commands.at(-1), ['symbol',
-        'Wavesfactory Spectre (VST3) could not be loaded.\n\nTracks:\n' + names +
+        'Wavesfactory Spectre (VST3) was not found.\n\nTracks:\n' + names +
         '\n\nAudio passes through dry. Restore the VST3 installation, then click Retry in the device.']);
 }
+// A timeout gives no evidence that the plug-in is missing. Group distinct causes by track.
+timers.clear();
+ctx=vm.createContext({patcher,Task,LiveAPI:trackAPI,Dict:Dictionary,Date:{now:()=>clock},Math,
+    outlet:(n,...args)=>commands.push(args)});
+vm.runInContext(boxes.ctrl.code,ctx);
+ctx.load(); advance(15000);
+vm.runInContext('queue.set("d778",JSON.stringify(["Lead","Cannot map the required VST3 parameter: Effect (expected ID 1)."]))',ctx);
+advance(650);
+const loadWarning=commands.at(-1)[1];
+assert(loadWarning.includes('An error occurred while loading Wavesfactory Spectre (VST3).'));
+assert(loadWarning.includes('The VST3 host did not respond.\n\nTracks:\nBass'));
+assert(loadWarning.includes('Effect (expected ID 1).\n\nTracks:\nLead'));
+assert(!loadWarning.includes('was not found'));
 const overlay=objects.get('warningOverlay');
 assert.equal(overlay.hidden,false);
 const modalCount=()=>commands.filter(msg=>msg[0]==='symbol').length;
 const lastStatus=()=>ui.filter(msg=>msg[0]==='face' && msg[1]==='status').at(-1)[2];
 const initialModals=modalCount();
-for(const [outcome,duration] of [['missing',50],['missing',1400],['ready',50]]){
+for(const [outcome,duration] of [['missing',50],['missing',1400],['loaderror',50],['ready',50]]){
     const loads=commands.filter(msg=>msg[0]==='load').length;
     ctx.retry();ctx.retry();
     assert.equal(lastStatus(),'loading');

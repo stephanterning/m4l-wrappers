@@ -134,7 +134,7 @@ function header() {
         label(ch,left,16.5,12,titleColors[letter],0,true);
         left+=mgraphics.text_measure(ch)[0]+1.15;
     }
-    label("v1.1",left+5,16,8.5,P.soft);
+    label("v1.2",left+5,16,8.5,P.soft);
     var x, i;
     // Direct band selection keeps coincident handles independently reachable.
     for (i=0;i<5;i++) {

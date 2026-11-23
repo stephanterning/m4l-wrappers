@@ -2,6 +2,7 @@
 #include "Discovery.h"
 #include "Meter.h"
 #include "ext.h"
+#include "LoadFailure.h"
 #include "ext_systhread.h"
 #include "z_dsp.h"
 struct GainRamp {
@@ -92,18 +93,25 @@ static void loadOnMain(Device* d,t_symbol*,long argc,t_atom* args){
         NSData* state=[[NSData alloc] initWithBase64EncodedString:encoded options:0];
         releasePlugin(d);
         NSArray<NSString*>* candidates=spectrePaths();
-        std::string error="Spectre VST3 is not installed";
+        bool found=false;
+        std::string error;
         for(NSString* path in candidates){
             if(![[NSFileManager defaultManager] fileExistsAtPath:path])continue;
+            found=true;
             auto fresh=owned(new Spectre([d]{qelem_set(d->queue);}));
             if(!fresh->open([path fileSystemRepresentation],error)){fresh->shutdown();continue;}
-            if(state.length)fresh->recall(state);
+            if(![encoded isEqualToString:@"-"] && (!state.length || !fresh->recall(state))){
+                fresh->shutdown();
+                error="The plug-in could not restore the saved settings for this instance.";
+                continue;
+            }
             bool ok=false;
             {std::lock_guard lock(d->core->swap);ok=fresh->prepare(d->core->rate,d->core->vector);if(ok)d->core->instance=fresh;}
             if(!ok){fresh->shutdown();error="Spectre did not enter stereo processing mode";continue;}
             announce(d,"ready");reportLatency(d,fresh->latencySamples());return;
         }
-        object_warn((t_object*)d,"%s",error.c_str());reportLatency(d,0);announce(d,"missing");
+        reportLatency(d,0);
+        reportLoadFailure((t_object*)d,d->events,found,error);
     }
 }
 static void load(Device* d,t_symbol* msg,long argc,t_atom* a){defer_low(d,(method)loadOnMain,msg,argc,a);}

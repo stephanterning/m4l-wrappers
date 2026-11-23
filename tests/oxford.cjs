@@ -100,3 +100,12 @@ linkControl.message('int',1);
 driveDial.message('float',-3);
 assert.equal(outputDial.value,15);
 console.log('Meter behavior, Gain Match and Drive Link through both Output limits passed');
+
+// An edit from the wrapper UI also refreshes the instance's native state.
+let snapshots=0;
+context.onSnapshot=()=>++snapshots;
+run('snapshotTask.schedule=onSnapshot; phase="ready"; control(1,26);');
+assert.deepEqual(seen.at(-1),[0,'param',1,.26]);
+assert.equal(snapshots,1);
+run('phase="missing"; control(1,81);');
+assert.equal(snapshots,1);

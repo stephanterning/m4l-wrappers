@@ -8,6 +8,7 @@
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/gui/iplugview.h"
+#include "Vst3Parameters.h"
 #include <array>
 #include <atomic>
 #include <algorithm>
@@ -18,7 +19,10 @@
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 using VST3::Hosting::Module;
-static constexpr std::array<const char*,8> names={"Input Gain","Effect","Curve","Output Gain","In","Band Split","Clip 0dB","Bypass"};
+static constexpr std::array<Vst3Control,8> controls = {{
+    {0,"Input Gain"}, {1,"Effect"}, {2,"Curve"}, {3,"Output Gain"},
+    {4,"In"}, {5,"Band Split"}, {6,"Clip 0dB"}, {13,"Bypass"}
+}};
 class InstanceProvider : public PlugProvider {
 public:
     using PlugProvider::PlugProvider;
@@ -71,7 +75,12 @@ public:
     }
     ~Oxford() override {shutdown();}
     bool open(const std::string& file,std::string& error){
-        module=getModule(file,error);if(!module)return false;
+        module=getModule(file,error);
+        if(!module){
+            // The SDK may return a localized macOS error. Keep the device message in English.
+            error="The VST3 bundle was found, but its executable or plug-in factory could not be loaded.";
+            return false;
+        }
         const auto& factory=module->getFactory();
         for(const auto& descriptor:factory.classInfos()){
             if(descriptor.ID().toString()!="5653544F494E546F78666F726420696E")continue;
@@ -85,13 +94,8 @@ public:
             if(component->getState(&state)==kResultOk){
                 state.seek(0,IBStream::kIBSeekSet,nullptr);controller->setComponentState(&state);
             }
-            unsigned found=0;
-            for(int j=0;j<controller->getParameterCount();j++){
-                ParameterInfo param{};if(controller->getParameterInfo(j,param)!=kResultOk)continue;
-                auto title=VST3::StringConvert::convert(param.title);
-                for(int i=0;i<8;i++)if(title==names[i]){ids[i]=param.id;pending[i]=controller->getParamNormalized(param.id);found|=1u<<i;}
-            }
-            if(found!=255){error="Unexpected Oxford parameter list";return false;}
+            if(!resolveParameters(*controller.get(),controls,7,ids,error))return false;
+            for(size_t i=0;i<ids.size();++i)pending[i]=controller->getParamNormalized(ids[i]);
             if(processor->canProcessSampleSize(kSample64)!=kResultOk){error="64-bit audio samples unsupported";return false;}
             SpeakerArrangement arrangement=SpeakerArr::kStereo;
             if(processor->setBusArrangements(&arrangement,1,&arrangement,1)!=kResultOk ||

@@ -1,5 +1,6 @@
 let startupWarningPending = true;
 let holdingRetryPanel = false;
+let failureDetail = "";
 const retrySearch = new Task(load, this);
 const releaseRetryPanel = new Task(function () {
     holdingRetryPanel = false;
@@ -8,21 +9,30 @@ const releaseRetryPanel = new Task(function () {
 
 function status(value) {
     phase = value;
+    if (value !== "loaderror") failureDetail = "";
     if (value === "ready") startupWarningPending = false;
     if (!holdingRetryPanel || value === "loading") showPanelStatus(value);
 }
 
+function loadSavedPlugin() {
+    const state = storedState();
+    // pattr stores "none" in a fresh device. Only a new instance gets the plug-in defaults.
+    outlet(0, "load", !state || state === "none" ? "-" : state);
+}
+
+function isLoadFailure(value) { return value === "missing" || value === "loaderror"; }
+
 function showPanelStatus(value) {
     panel().message("status", value);
     const overlay = patch.getnamed("warningOverlay");
-    const visible = value === "missing" || value === "loading";
+    const visible = isLoadFailure(value) || value === "loading";
     overlay.hidden = !visible;
     overlay.ignoreclick = !visible;
     if (visible) patch.bringtofront(overlay);
-    overlay.message("status", value);
+    overlay.message("status", value, failureDetail);
 }
 function retry() {
-    if (holdingRetryPanel || phase !== "missing") return;
+    if (holdingRetryPanel || !isLoadFailure(phase)) return;
     startupWarningPending = false;
     holdingRetryPanel = true;
     clear();
@@ -37,7 +47,13 @@ function cancelRetry() {
     holdingRetryPanel = false;
 }
 function missing() {
-    loadTimeout.cancel(); status("missing");
+    recordFailure("missing", "");
+}
+function loaderror(reason) {
+    recordFailure("loaderror", String(reason || "The VST3 host could not initialize the plug-in."));
+}
+function recordFailure(value, detail) {
+    loadTimeout.cancel(); failureDetail = detail; status(value);
     if (!startupWarningPending) return;
     startupWarningPending = false;
     let track = "Unknown track", set = "local";
@@ -49,8 +65,8 @@ function missing() {
             device.goto("canonical_parent");
         }
     } catch(e) { key = "d" + Date.now() + "_" + Math.random(); }
-    queue = new Dict(warningNamespace + set);
-    queue.set(key, track); queue.set("last", String(Date.now())); warningTask.schedule(650);
+    queue = new Dict(warningNamespace + "v2_" + set);
+    queue.set(key, JSON.stringify([track, detail])); queue.set("last", String(Date.now())); warningTask.schedule(650);
 }
 function clear() {
     warningTask.cancel();
@@ -62,14 +78,22 @@ function flush() {
     const elapsed = Date.now() - Number(queue.get("last"));
     if (elapsed < 600) { warningTask.schedule(650 - elapsed); return; }
     const keys = [].concat(queue.getkeys() || []).filter(k => k !== "last");
-    const tracks = Array.from(new Set(keys.map(k => String(queue.get(k)))));
-    queue.clear();
-    if (tracks.length) {
-        const message = [
-            pluginName + " (VST3) could not be loaded.",
-            "Tracks:\n" + tracks.join("\n"),
-            "Audio passes through dry. Restore the VST3 installation, then click Retry in the device."
-        ].join("\n\n");
-        outlet(1, "symbol", message);
+    const groups = new Map();
+    for (const k of keys) {
+        const [track, detail] = JSON.parse(String(queue.get(k)));
+        if (!groups.has(detail)) groups.set(detail, new Set());
+        groups.get(detail).add(track);
     }
+    queue.clear();
+    if (!groups.size) return;
+    const paragraphs = [];
+    for (const [detail, tracks] of groups) {
+        paragraphs.push(detail ? "An error occurred while loading " + pluginName + " (VST3).\n" + detail
+                               : pluginName + " (VST3) was not found.");
+        paragraphs.push("Tracks:\n" + Array.from(tracks).join("\n"));
+    }
+    paragraphs.push(groups.size === 1 && groups.has("")
+        ? "Audio passes through dry. Restore the VST3 installation, then click Retry in the device."
+        : "Audio passes through dry. Click Retry in the device to try again.");
+    outlet(1, "symbol", paragraphs.join("\n\n"));
 }

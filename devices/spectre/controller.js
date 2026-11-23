@@ -63,7 +63,7 @@ function syncPlugin() {
     panel().message("params", ...values);
     if (phase === "ready") values.forEach((v, i) => outlet(0, "param", i, v));
 }
-const loadTimeout = new Task(function () { if (phase === "loading") missing(); }, this);
+const loadTimeout = new Task(function () { if (phase === "loading") loaderror("The VST3 host did not respond."); }, this);
 const warningTask = new Task(flush, this);
 function initialized() {
     syncGains();
@@ -73,14 +73,13 @@ function initialized() {
 }
 function load() {
     clear(); status("loading"); loadTimeout.schedule(15000);
-    const state = storedState();
-    outlet(0, "load", state.length > 8 ? state : "-");
+    loadSavedPlugin();
 }
 function ready() {
     loadTimeout.cancel(); clear(); status("ready"); syncPlugin(); snapshotSoon();
 }
 function action() {
-    if (phase === "missing") retry();
+    if (isLoadFailure(phase)) retry();
     else if (phase === "ready") outlet(0, "open");
 }
 function cleanup() {
