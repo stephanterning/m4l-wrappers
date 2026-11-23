@@ -109,7 +109,7 @@
             120.0,
             20.0
           ],
-          "text": "spectrewrapper~",
+          "text": "spectrewrapper2~",
           "varname": "dsp"
         }
       },

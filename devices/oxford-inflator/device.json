@@ -1,6 +1,6 @@
 {
   "name": "Oxford Inflator Wrapper",
-  "external": "oxfordinflatorpeak~",
+  "external": "oxfordinflatorpeak2~",
   "resources": {
     "oxford-surface.png": "devices/oxford-inflator/oxford-surface.png",
     "oxford-transparent.js": "shared/transparent.js",

@@ -61,7 +61,7 @@ Each directory under `devices/` owns its editable Max patch, controller, panel, 
 
 ## Adding a wrapper
 
-Start with the device closest to the new plug-in. Give its external and saved state distinct identifiers. Identify the plug-in by VST3 class ID, map its published parameter IDs, and negotiate its supported sample format and bus layout. Preserve the identifiers used by released devices so existing Live Sets can recall them. The same built .amxd is used locally and for distribution. Each saved instance restores its own Live parameters and plug-in state. Test an update by saving distinct settings in two instances of the previous version, replacing the device file at the same path and reopening the Set.
+Start with the device closest to the new plug-in. Give its external and saved state distinct identifiers. Identify the plug-in by VST3 class ID, map its published parameter IDs, and negotiate its supported sample format and bus layout. Preserve Live parameter identifiers, patch scripting names and the saved-state format so existing Live Sets can recall them. Give a changed native host a new Max class and bundle name for distribution. Max extracts frozen externals by name, and older devices may still have the previous binary loaded or cached. The same built .amxd is used locally and for distribution. Each saved instance restores its own Live parameters and plug-in state. Test an update by saving distinct settings in two instances of the previous version, replacing the device file at the same path and reopening the Set.
 
 Run the controller and package checks after building (Node.js required):
 

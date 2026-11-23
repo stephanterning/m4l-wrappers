@@ -28,8 +28,8 @@ const boxes=Object.fromEntries(patch.boxes.map(({box:b})=>[b.varname,b]));
 const ids=new Set(Object.values(boxes).map(b=>b.id));
 for(const {patchline:l} of patch.lines) assert(ids.has(l.source[0]) && ids.has(l.destination[0]));
 const assets=[...entries.keys()];
-assert(assets.includes('spectrewrapper~/zipfile'));
-assert.deepEqual(entries.get('spectrewrapper~/executable'),fs.readFileSync(path.join(__dirname,'../build/spectre/spectrewrapper~.mxo/Contents/MacOS/spectrewrapper~')));
+assert(assets.includes('spectrewrapper2~/zipfile'));
+assert.deepEqual(entries.get('spectrewrapper2~/executable'),fs.readFileSync(path.join(__dirname,'../build/spectre/spectrewrapper2~.mxo/Contents/MacOS/spectrewrapper2~')));
 for(const box of Object.values(boxes)) {
     if(['jsui','v8ui'].includes(box.maxclass)) assert(assets.includes(box.filename));
     if(box.jspainterfile) assert(assets.includes(box.jspainterfile));
