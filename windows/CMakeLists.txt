@@ -10,6 +10,8 @@ set(VST3_SDK "${WRAPPERS_ROOT}/deps/vst3sdk" CACHE PATH "Steinberg VST 3 SDK che
 set(MAX_SDK_BASE "${WRAPPERS_ROOT}/deps/max-sdk-base" CACHE PATH "Cycling '74 Max SDK base checkout")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Follow the Max SDK's Windows runtime choice so each external is self-contained.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 add_compile_options(/utf-8 /Zc:__cplusplus)
 add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00)
 
@@ -54,6 +56,7 @@ add_max_external(spectre)
 
 include(CTest)
 if(BUILD_TESTING)
+    set(SMTG_USE_STATIC_CRT ON CACHE BOOL "Use the same runtime in the test plug-ins")
     add_executable(meter-test "${WRAPPERS_ROOT}/tests/meters.cpp")
     add_test(NAME meter-readings COMMAND meter-test)
     add_executable(parameter-test "${WRAPPERS_ROOT}/tests/vst3-parameters.cpp")
