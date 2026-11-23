@@ -34,10 +34,15 @@ int wmain(int argc,wchar_t** argv) {
     const auto fixture=fs::absolute(argv[1]);
     const auto parent=fs::absolute(argv[0]).parent_path()/L"VST3"/L"Test \u00e5"/fixture.stem();
     const auto plugin=parent/pluginFile;
+#ifdef TEST_SPECTRE
+    const auto binary=plugin/L"Contents"/L"x86_64-win"/pluginFile;
+#else
+    const auto binary=plugin;
+#endif
     const auto locate=[&](){
         for(const auto& path:discover()){
             std::error_code ec;
-            if(fs::equivalent(fs::u8path(path),plugin,ec))return path;
+            if(fs::equivalent(fs::u8path(path),binary,ec))return path;
         }
         return std::string{};
     };
@@ -48,11 +53,6 @@ int wmain(int argc,wchar_t** argv) {
         // Each executable owns its fixture directory; no system plug-ins are touched.
         fs::remove_all(parent);
         check(locate().empty(),"unexpected test plug-in before install");
-#ifdef TEST_SPECTRE
-        const auto binary=plugin/L"Contents"/L"x86_64-win"/pluginFile;
-#else
-        const auto binary=plugin;
-#endif
         fs::create_directories(binary.parent_path());
         fs::copy_file(fixture,binary);
         auto path=locate();
