@@ -134,7 +134,7 @@ function header() {
         label(ch,left,16.5,12,titleColors[letter],0,true);
         left+=mgraphics.text_measure(ch)[0]+1.15;
     }
-    label("v1.0",left+5,16,8.5,P.soft);
+    label("v1.1",left+5,16,8.5,P.soft);
     var x, i;
     // Direct band selection keeps coincident handles independently reachable.
     for (i=0;i<5;i++) {
@@ -147,12 +147,13 @@ function header() {
         label(i+1,x+10.5,16,9.5,colors[i],1,true);
         target("band",x-1,2,23,21,i);
     }
-    var title = state === "missing" ? "VST3 missing · Retry" : state === "ready" ? "Open plug-in" : "Loading…";
-    var width = state === "missing" ? 103 : 73;
-    x = SIDE-width-6;
-    roundRect(x,4,width,17,3,P.field);
-    label(title,x+width/2,16,9.4,state === "missing" ? P.warn : P.text,1,true);
-    if (state === "missing" || state === "ready") target("action",x,2,width,21,0);
+    if (state === "ready") {
+        var width = 73;
+        x = SIDE-width-6;
+        roundRect(x,4,width,17,3,P.field);
+        label("Open plug-in",x+width/2,16,9.4,P.text,1,true);
+        target("action",x,2,width,21,0);
+    }
     line(0,25,SIDE,25,P.grid,1);
 }
 function grid(spectralLine) {

@@ -63,7 +63,6 @@ function syncPlugin() {
     panel().message("params", ...values);
     if (phase === "ready") values.forEach((v, i) => outlet(0, "param", i, v));
 }
-function status(value) { phase = value; panel().message("status", value); }
 const loadTimeout = new Task(function () { if (phase === "loading") missing(); }, this);
 const warningTask = new Task(flush, this);
 function initialized() {
@@ -81,10 +80,11 @@ function ready() {
     loadTimeout.cancel(); clear(); status("ready"); syncPlugin(); snapshotSoon();
 }
 function action() {
-    if (phase === "missing") load();
+    if (phase === "missing") retry();
     else if (phase === "ready") outlet(0, "open");
 }
 function cleanup() {
+    cancelRetry();
     if (transportObserver) { transportObserver.property = ""; transportObserver = null; }
     applyLatency.cancel(); snapshotTask.cancel(); loadTimeout.cancel(); clear();
 }

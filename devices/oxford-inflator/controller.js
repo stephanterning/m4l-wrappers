@@ -19,7 +19,6 @@ const warningTask=new Task(flush,this);
 const loadTimeout=new Task(function(){if(phase==="loading")missing();},this);
 function panel(){return patch.getnamed("face");}
 function update(i,v){panel().message("value",i,v);}
-function status(s){phase=s;panel().message("status",s);}
 function control(i,value){
     const v=Number(value);update(i,v);
     if(phase==="ready")outlet(0,"param",i,(v-low[i])/(high[i]-low[i]));
@@ -37,6 +36,6 @@ function load(){
     const state=storedState();
     outlet(0,"load",state.length>100?state:"-");
 }
-function action(){if(phase==="missing")load();else if(phase==="ready")outlet(0,"open");}
-function cleanup(){if(transportObserver){transportObserver.property="";transportObserver=null;}snapshotTask.cancel();loadTimeout.cancel();clear();}
+function action(){if(phase==="missing")retry();else if(phase==="ready")outlet(0,"open");}
+function cleanup(){cancelRetry();if(transportObserver){transportObserver.property="";transportObserver=null;}snapshotTask.cancel();loadTimeout.cancel();clear();}
 

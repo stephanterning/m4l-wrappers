@@ -49,8 +49,23 @@ for(const [key,b] of Object.entries(boxes)) {
         }
     });
 }
-const patcher={getnamed:n=>objects.get(n),setattr:(k,v)=>latency=v};
-class Task {constructor(fn){this.fn=fn;} schedule(ms){if(ms===0)this.fn();} cancel(){}}
+const patcher={bringtofront:o=>assert.equal(o,objects.get("warningOverlay")),getnamed:n=>objects.get(n),setattr:(k,v)=>latency=v};
+let clock=0;
+const timers=new Map();
+class Task {
+    constructor(fn){this.fn=fn;}
+    schedule(ms){if(ms===0)this.fn();else timers.set(this,clock+ms);}
+    cancel(){timers.delete(this);}
+}
+function advance(ms){
+    const end=clock+ms;
+    while(true){
+        const next=[...timers].sort((a,b)=>a[1]-b[1])[0];
+        if(!next || next[1]>end)break;
+        clock=next[1];timers.delete(next[0]);next[0].fn();
+    }
+    clock=end;
+}
 class LiveAPI {constructor(){this.id=1;}get(){return 0;}}
 ctx=vm.createContext({patcher,Task,LiveAPI,outlet:(n,...args)=>commands.push(args),Date,Math});
 vm.runInContext(boxes.ctrl.code,ctx);
@@ -81,13 +96,46 @@ class Dictionary {
     get(k){return this.values.get(k);} remove(k){this.values.delete(k);}
     getkeys(){return Array.from(this.values.keys());} clear(){this.values.clear();}
 }
-ctx.Dict=Dictionary;
-ctx.LiveAPI=class {constructor(){this.type='Track';this.id=777;}get(){return 'Bass';}};
-ctx.missing();
-vm.runInContext('queue.set("last",String(Date.now()-1500))',ctx);
-ctx.flush();
-assert(commands.at(-1)[1].includes('Wavesfactory Spectre (VST3) could not be loaded. Tracks: Bass.'));
-assert(commands.at(-1)[1].includes('Retry'));
-ctx.action();assert.equal(commands.at(-1)[0],'load');ctx.ready();
+const trackAPI=class {constructor(){this.type='Track';this.id=777;}get(){return 'Bass';}};
+
+for (const extraTracks of [false, true]) {
+    timers.clear();
+    ctx=vm.createContext({patcher,Task,LiveAPI:trackAPI,Dict:Dictionary,Date:{now:()=>clock},Math,
+        outlet:(n,...args)=>commands.push(args)});
+    vm.runInContext(boxes.ctrl.code,ctx);
+    ctx.load();ctx.missing();
+    if (extraTracks) vm.runInContext('queue.set("d778","MIX PRE-MASTER"); queue.set("d779","Bass")',ctx);
+    vm.runInContext('queue.set("last",String(Date.now()-1500))',ctx);
+    ctx.flush();
+    const names = extraTracks ? 'Bass\nMIX PRE-MASTER' : 'Bass';
+    assert.deepEqual(commands.at(-1), ['symbol',
+        'Wavesfactory Spectre (VST3) could not be loaded.\n\nTracks:\n' + names +
+        '\n\nAudio passes through dry. Restore the VST3 installation, then click Retry in the device.']);
+}
+const overlay=objects.get('warningOverlay');
+assert.equal(overlay.hidden,false);
+const modalCount=()=>commands.filter(msg=>msg[0]==='symbol').length;
+const lastStatus=()=>ui.filter(msg=>msg[0]==='face' && msg[1]==='status').at(-1)[2];
+const initialModals=modalCount();
+for(const [outcome,duration] of [['missing',50],['missing',1400],['ready',50]]){
+    const loads=commands.filter(msg=>msg[0]==='load').length;
+    ctx.retry();ctx.retry();
+    assert.equal(lastStatus(),'loading');
+    advance(50);
+    assert.equal(commands.filter(msg=>msg[0]==='load').length,loads+1);
+    advance(duration-50);
+    assert.equal(lastStatus(),'loading');
+    ctx[outcome]();
+    if(duration<1000){
+        advance(999-duration);
+        assert.equal(lastStatus(),'loading');
+        ctx.retry();
+        advance(1);
+    }
+    assert.equal(lastStatus(),outcome);
+    advance(700);
+    assert.equal(modalCount(),initialModals);
+}
+assert.equal(overlay.hidden,true);assert.equal(overlay.ignoreclick,true);
 assert(ui.some(e=>e[0]==='face' && e[1]==='status' && e[2]==='ready'));
 console.log('Track-named English missing warning, Retry reload, and restored state routing passed.');

@@ -103,6 +103,17 @@ def build_device(device):
     output = ROOT / "dist" / (config["name"] + ".amxd")
     output.parent.mkdir(exist_ok=True)
     assets = config["resources"].copy()
+    panel = next(row["box"] for row in patch["boxes"] if row["box"]["varname"] == "face")
+    panel_x, _, panel_width, height = panel["presentation_rect"]
+    width = patch["devicewidth"]
+    overlay = dict(id="warning-overlay", varname="warningOverlay", maxclass="v8ui",
+                   filename="wrapper-warning-overlay.js", numinlets=1, numoutlets=1, outlettype=[""],
+                   jsarguments=[panel_x / width, panel_width / width], presentation=1,
+                   presentation_rect=[0, 0, width, height],
+                   patching_rect=[10, 1100, width, height])
+    patch["boxes"].insert(0, {"box": overlay})
+    patch["lines"].append({"patchline": {"source": [overlay["id"], 0], "destination": [controller["id"], 0]}})
+    assets[overlay["filename"]] = "shared/warning-overlay.js"
     if device.name == "oxford-inflator":
         skin = ROOT / assets["oxford-surface.png"]
         if skin.is_file():

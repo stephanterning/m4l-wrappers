@@ -60,13 +60,10 @@ function paintFace(g){
         readout(g,display,xs[i]);fader(g,i,xs[i]);
     }
 
-    txt(g,"v1.0",158,41,9,[.28,.35,.48],1,false);
+    txt(g,"v1.1",158,41,9,[.28,.35,.48],1,false);
     button(g,158,68,"CLIP 0 dB",vals[6],[.96,.38,.43]);
     button(g,158,100,"BAND SPLIT",vals[5],[.98,.82,.27]);
     button(g,158,132,"EFFECT IN",vals[4],[.24,.92,.58]);
-    if(state==="missing"||state==="loading"){
-        rect(g,54,2,210,23,state==="missing"?[.30,.135,.09]:[.22,.32,.46]);
-        txt(g,state==="missing"?"VST3 missing   ·   Retry":"Loading Oxford Inflator…",159,18,12,pale,1,true);
-    }
+
 }
 function paint(){var g=mgraphics;g.save();var size=g.size;g.scale(size[0]/W,size[1]/H);paintFace(g);g.restore();}
