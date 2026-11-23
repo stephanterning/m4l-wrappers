@@ -99,6 +99,7 @@ static void loadOnMain(Device* d,t_symbol*,long argc,t_atom* args){
         try {
             candidates=spectrePaths();
         } catch(const std::filesystem::filesystem_error&) {
+            reportLatency(d,0);
             reportLoadFailure((t_object*)d,d->events,true,"The VST3 host could not search the plug-in folders.");
             return;
         }

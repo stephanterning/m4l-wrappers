@@ -14,7 +14,7 @@ constexpr auto pluginFile=L"Spectre.vst3";
 #else
 using Engine=Oxford;
 const auto discover=oxfordPaths;
-constexpr auto pluginFile=L"Oxford Inflator.vst3";
+constexpr auto pluginFile=L"Oxford Inflator Native.vst3";
 #endif
 
 static void check(bool condition,const std::string& message) {
@@ -34,7 +34,7 @@ int wmain(int argc,wchar_t** argv) {
     const auto fixture=fs::absolute(argv[1]);
     const auto parent=fs::absolute(argv[0]).parent_path()/L"VST3"/L"Test \u00e5"/fixture.stem();
     const auto plugin=parent/pluginFile;
-#ifdef TEST_SPECTRE
+#ifndef TEST_SPECTRE
     const auto binary=plugin/L"Contents"/L"x86_64-win"/pluginFile;
 #else
     const auto binary=plugin;
