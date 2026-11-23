@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleExecutable</key>
-	<string>oxfordinflatorpeak~</string>
+	<string>oxfordinflatorpeak2~</string>
 	<key>CFBundleIdentifier</key>
-	<string>local.music.oxfordinflatorpeak</string>
+	<string>local.music.oxfordinflatorpeak2</string>
 	<key>CFBundleName</key>
-	<string>oxfordinflatorpeak~</string>
+	<string>oxfordinflatorpeak2~</string>
 	<key>CFBundlePackageType</key>
 	<string>iLaX</string>
 	<key>CFBundleShortVersionString</key>

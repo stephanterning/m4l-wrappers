@@ -218,7 +218,7 @@ static void* create(){
     d->events=outlet_new(d,nullptr);outlet_new(d,"signal");outlet_new(d,"signal");return d;
 }
 extern "C" void C74_EXPORT ext_main(void*){
-    type=class_new("spectrewrapper~",(method)create,(method)destroy,sizeof(Device),nullptr,0);
+    type=class_new("spectrewrapper2~",(method)create,(method)destroy,sizeof(Device),nullptr,0);
     class_addmethod(type,(method)load,"load",A_GIMME,0);class_addmethod(type,(method)setParam,"param",A_GIMME,0);
     class_addmethod(type,(method)show,"open",0);class_addmethod(type,(method)dsp,"dsp64",A_CANT,0);
     class_addmethod(type,(method)snapshot,"snapshot",0);
