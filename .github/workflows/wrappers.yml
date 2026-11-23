@@ -1,0 +1,55 @@
+name: Build and test wrappers
+on:
+  push:
+    branches: [main, 'codex/windows-vst3-host']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/wrapper-sdks
+      - name: Configure for Windows x64
+        run: cmake -S windows -B build/windows -G "Visual Studio 17 2022" -A x64
+      - name: Build externals and tests
+        run: cmake --build build/windows --config Release --parallel
+      - name: Test Windows binaries
+        run: ctest --test-dir build/windows -C Release --output-on-failure
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-externals
+          path: build/windows/externals/*.mxe64
+          if-no-files-found: error
+  package:
+    needs: windows
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/wrapper-sdks
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-externals
+          path: build/windows/externals
+      - name: Build and freeze both platforms
+        run: python3 build.py --windows-externals build/windows/externals
+      - name: Check archive contents and device controllers
+        run: |
+          python3 tests/package.py --windows-externals build/windows/externals
+          node tests/oxford.cjs
+          node tests/spectre.cjs
+          clang++ -std=c++17 -O2 tests/meters.cpp -o build/test-meters
+          build/test-meters
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m4l-wrappers-macos-windows-x64
+          path: dist/*.amxd
+          if-no-files-found: error

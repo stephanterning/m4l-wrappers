@@ -1,4 +1,3 @@
-#import <AppKit/AppKit.h>
 #include "public.sdk/source/vst/hosting/module.h"
 #include "public.sdk/source/vst/hosting/plugprovider.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
@@ -9,6 +8,8 @@
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/gui/iplugview.h"
 #include "Vst3Parameters.h"
+#include "PluginEditor.h"
+#include "PluginState.h"
 #include <array>
 #include <atomic>
 #include <algorithm>
@@ -41,9 +42,7 @@ class Oxford final : public U::Implements<U::Directly<IComponentHandler,IPlugFra
     IPtr<IComponent> component;
     IPtr<IEditController> controller;
     IPtr<IAudioProcessor> processor;
-    IPtr<IPlugView> view;
-    NSWindow* window=nil;
-    id closeObserver=nil;
+    PluginEditor editor;
     bool active=false,processing=false,mapped=false;
     int block=0;
     double rate=0;
@@ -59,14 +58,7 @@ class Oxford final : public U::Implements<U::Directly<IComponentHandler,IPlugFra
     }
 public:
     explicit Oxford(std::function<void()> wake):wake(std::move(wake)){}
-    void detachEditor(){
-        if(closeObserver){[[NSNotificationCenter defaultCenter] removeObserver:closeObserver];closeObserver=nil;}
-        if(view){view->removed();view->setFrame(nullptr);view=nullptr;}
-    }
-    void closeEditor(){
-        NSWindow* old=window;window=nil;detachEditor();
-        if(old){[old orderOut:nil];[old close];}
-    }
+    void closeEditor(){editor.close();}
     void shutdown(){
         mapped=false;
         closeEditor();stop();
@@ -156,38 +148,14 @@ public:
         if(mapped)for(int i=0;i<8;i++)if(ids[i]==id){postEdit(i,val);editorDirty.fetch_or(1u<<i,std::memory_order_release);wake();break;}
         return kResultOk;
     }
-    bool showEditor(){
-        if(window){[window makeKeyAndOrderFront:nil];return true;}
-        view=owned(controller->createView(ViewType::kEditor));if(!view)return false;
-        ViewRect rect{};if(view->isPlatformTypeSupported(kPlatformTypeNSView)!=kResultOk||view->getSize(&rect)!=kResultOk){view=nullptr;return false;}
-        NSRect frame=NSMakeRect(0,0,std::max(100,rect.getWidth()),std::max(100,rect.getHeight()));
-        window=[[NSWindow alloc] initWithContentRect:frame styleMask:(NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable) backing:NSBackingStoreBuffered defer:NO];
-        [window setReleasedWhenClosed:NO];window.title=@"Sonnox Oxford Inflator";[window center];
-        view->setFrame(this);
-        if(view->attached((__bridge void*)window.contentView,kPlatformTypeNSView)!=kResultOk){
-            view->setFrame(nullptr);view=nullptr;[window close];window=nil;return false;
-        }
-        closeObserver=[[NSNotificationCenter defaultCenter] addObserverForName:NSWindowWillCloseNotification object:window queue:nil usingBlock:^(NSNotification*){
-            this->window=nil;this->detachEditor();
-        }];
-        [window makeKeyAndOrderFront:nil];
-        return true;
-    }
-    NSData* state(){
-        MemoryStream stream;
-        if(!component||component->getState(&stream)!=kResultOk||stream.getSize()<=0||stream.getSize()>256*1024)return nil;
-        return [NSData dataWithBytes:stream.getData() length:stream.getSize()];
-    }
-    bool recall(NSData* bytes){
-        if(!component||!bytes.length||bytes.length>256*1024)return false;
-        MemoryStream stream((void*)bytes.bytes,bytes.length);
-        if(component->setState(&stream)!=kResultOk)return false;
-        stream.seek(0,IBStream::kIBSeekSet,nullptr);controller->setComponentState(&stream);
+    bool showEditor(){return editor.show(controller.get(),this,"Sonnox Oxford Inflator");}
+    PluginState state(){return readPluginState(component.get());}
+    bool recall(const PluginState& bytes){
+        if(!restorePluginState(component.get(),controller.get(),bytes))return false;
         for(int i=0;i<8;i++)postEdit(i,controller->getParamNormalized(ids[i]));
         return true;
     }
     tresult PLUGIN_API resizeView(IPlugView* plug,ViewRect* rect) override{
-        if(!rect||!window||plug!=view.get())return kResultFalse;
-        [window setContentSize:NSMakeSize(rect->getWidth(),rect->getHeight())];return plug->onSize(rect);
+        return editor.resize(plug,rect);
     }
 };
