@@ -1,6 +1,7 @@
 #include "Engine.mm"
 #include "Discovery.h"
 #include <windows.h>
+#include <objbase.h>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
