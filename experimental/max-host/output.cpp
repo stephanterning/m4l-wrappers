@@ -1,9 +1,10 @@
 // Four MSP signals enter the output stage: original stereo, then processed stereo.
 #include "GainAndMeterOutput.h"
 #include "z_dsp.h"
-#include <limits>
+
 
 struct OutputState {
+    bool preGain = false;
     GainRamp trim;
     StereoMeters meters;
     MeterMailbox mailbox;
@@ -56,25 +57,45 @@ static void process(Output* object, t_object*, double** input, long, double** ou
         qelem_set(object->queue);
     }
 }
+static void preProcess(Output* object, t_object*, double** input, long, double** output,
+                       long, long frames, long, void*) {
+    auto& state = *object->state;
+    auto& gain = state.trim;
+    gain.update(gain.target.load(std::memory_order_relaxed), state.rampFrames);
+    if (gain.unity()) {
+        for (int ch = 0; ch < 2; ++ch)
+            if (input[ch] != output[ch]) std::copy_n(input[ch], frames, output[ch]);
+    } else if (!gain.remaining) {
+        for (int ch = 0; ch < 2; ++ch)
+            for (long i = 0; i < frames; ++i) output[ch][i] = input[ch][i] * gain.gain;
+    } else {
+        for (long i = 0; i < frames; ++i) {
+            const double value = gain.next();
+            output[0][i] = input[0][i] * value;
+            output[1][i] = input[1][i] * value;
+        }
+    }
+}
 static void dsp(Output* output, t_object* chain, short*, double rate, long, long) {
     auto& state = *output->state;
     state.rampFrames = std::max(1, int(std::lround(rate * 0.005)));
-    state.meters.configure(rate);
+    if (!state.preGain) state.meters.configure(rate);
     state.settledFrames = 0;
-    object_method(chain, gensym("dsp_add64"), output, process, 0, nullptr);
+    object_method(chain, gensym("dsp_add64"), output, state.preGain ? preProcess : process, 0, nullptr);
 }
 static void trim(Output* output, double db) {
     if (std::isfinite(db)) output->state->trim.target.store(std::pow(10., std::clamp(db, -24., 24.) / 20.));
 }
 static void wet(Output* output, t_atom_long active) { output->state->enabled.store(active != 0); }
 static void transport(Output* output, t_atom_long token) { output->state->transport.store(long(token)); }
-static void* create() {
+static void* create(t_symbol* mode) {
     auto* output = static_cast<Output*>(object_alloc(outputClass));
     if (!output) return nullptr;
     output->state = new OutputState;
     output->queue = qelem_new(output, (method)flush);
-    dsp_setup(&output->object, 4);
-    output->object.z_misc |= Z_NO_INPLACE;
+    output->state->preGain = mode == gensym("drive");
+    dsp_setup(&output->object, output->state->preGain ? 2 : 4);
+    if (!output->state->preGain) output->object.z_misc |= Z_NO_INPLACE;
     output->events = outlet_new(output, nullptr);
     outlet_new(output, "signal");
     outlet_new(output, "signal");
@@ -86,7 +107,7 @@ static void destroy(Output* output) {
     delete output->state;
 }
 extern "C" void C74_EXPORT ext_main(void*) {
-    outputClass = class_new("m4lwrapperoutput~", (method)create, (method)destroy, sizeof(Output), nullptr, 0);
+    outputClass = class_new("m4lwrappergainstage~", (method)create, (method)destroy, sizeof(Output), nullptr, A_DEFSYM, 0);
     class_addmethod(outputClass, (method)dsp, "dsp64", A_CANT, 0);
     class_addmethod(outputClass, (method)trim, "output", A_FLOAT, 0);
     class_addmethod(outputClass, (method)wet, "wet", A_LONG, 0);

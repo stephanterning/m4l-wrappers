@@ -109,3 +109,9 @@ assert.deepEqual(seen.at(-1),[0,'param',1,.26]);
 assert.equal(snapshots,1);
 run('phase="missing"; control(1,81);');
 assert.equal(snapshots,1);
+
+// A delayed host reply must not replace the last working bank while unavailable.
+const bank = patcher.getnamed('bankState');
+bank.value = 'previous-instance-state';
+run('plugstate("unavailable-state");');
+assert.equal(bank.value, 'previous-instance-state');

@@ -1,3 +1,4 @@
+const pointerControls = ["preDrive", "postOutput", "driveLink", "input", "amount", "curve", "output", "effectIn", "split", "clip", "editorButton"];
 const warningNamespace = "oxford_single_host_missing_";
 const pluginName = "Sonnox Oxford Inflator";
 inlets=1;outlets=2;
@@ -13,6 +14,7 @@ function storedState(){
     return String(data||"").replace(/^symbol[, ]/,"");
 }
 function plugstate(data){
+    if(phase!=="ready")return;
     const token=String(data),storage=patch.getnamed("bankState");
     if(storedState()!==token)storage.message("symbol",token);
 }

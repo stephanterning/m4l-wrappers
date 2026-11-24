@@ -1,3 +1,4 @@
+const pointerControls = ["preDrive", "postOutput", "driveLink"];
 const warningNamespace = "spectre_missing_";
 const pluginName = "Wavesfactory Spectre";
 inlets = 1;
@@ -32,6 +33,7 @@ function storedState() {
     return String(Array.isArray(data) ? data[data.length - 1] : data || "").replace(/^symbol[, ]/, "");
 }
 function plugstate(data) {
+    if (phase !== "ready") return;
     if (storedState() !== String(data)) patch.getnamed("bankState").message("symbol", String(data));
 }
 const snapshotTask = new Task(function () { if (phase === "ready") outlet(0, "snapshot"); }, this);
@@ -50,7 +52,7 @@ function control(index, value) {
 }
 function param(index, normalized) {
     // Edits from the embedded panel pass through the Live parameter for automation and recall.
-    if (parameters[index]) patch.getnamed("param"+index).message(parameters[index].choices ? "int" : "float", toLive(index, normalized));
+    if (phase === "ready" && parameters[index]) patch.getnamed("param"+index).message(parameters[index].choices ? "int" : "float", toLive(index, normalized));
 }
 function edited(index, normalized) {
     if (phase !== "ready" || !parameters[index]) return;

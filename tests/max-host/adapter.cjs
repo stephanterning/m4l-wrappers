@@ -20,18 +20,20 @@ class File {
     close() {}
 }
 const product = {id: 17, cid:"0123456789ABCDEF0123456789ABCDEF", name:"Fixture", parameters:["Gain","Quality"]};
+let storedValue = 0.7, readParameter = 0;
 let installed = true, wrong = false, missingParameter = false, corruptRead = false;
 const context = {Task, File, product, post(){}, patcher:{getnamed(){return {getattr(){return installed ? ["C74_VST3:/Fixture",17]:null;}};}},
     outlet(out, op, ...args) {
         events.push([out,op,...args]);
         if (out !== 0) return;
-        if (op === "get") context.parameterChanged(args[0], args[0] === -8 ? (wrong ? 99 : 17) : 60);
+        if (Array.isArray(op)) readParameter = op[1];
+        if (op === "get") context.parameterChanged(args[0], args[0] === -8 ? (wrong ? 99 : 17) : args[0] === -10 ? 60 : readParameter);
         if (op === "params") {
             context.inlet = 1;
             for (const name of missingParameter ? ["Gain"] : ["Quality","Gain"]) { context.messagename=name;context.anything(); }
             context.inlet = 0;
         }
-        if (op === "read" && !corruptRead) context.parameterChanged(2,0.7);
+        if (op === "read" && !corruptRead) readParameter = storedValue;
         if (op === "write") files.set(args[0],Array.from(context.legacyPreset([50,60,70])));
     }};
 vm.createContext(context);
@@ -48,6 +50,7 @@ const invalid=Array.from(context.legacyPreset([1]));invalid[40]=255;
 assert.throws(()=>context.parsePreset(invalid));
 context.load("AQID");drain();assert.ok(was(1,"ready") && was(3,"wet",1));assert.ok(was(1,"latency",60));
 reset();context.param(0,.4);assert.ok(was(0,[2,.4]));
+storedValue=.25;context.load("AQID");drain();assert.ok(was(1,"ready"));
 context.snapshot();assert.ok(was(1,"plugstate",Buffer.from([50,60,70]).toString("base64")));
 for(const failure of ["absent","wrong","missing parameter","corrupt preset","unconfirmed restore"]){
     reset();installed=failure!=="absent";wrong=failure==="wrong";missingParameter=failure==="missing parameter";corruptRead=failure==="unconfirmed restore";

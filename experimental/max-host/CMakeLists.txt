@@ -14,6 +14,6 @@ target_compile_options(output PRIVATE /utf-8)
 set_property(TARGET output PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 target_include_directories(output PRIVATE "${root}/shared" "${max}" "${msp}")
 target_link_libraries(output PRIVATE "${max}/x64/MaxAPI.lib" "${msp}/x64/MaxAudio.lib")
-set_target_properties(output PROPERTIES PREFIX "" SUFFIX ".mxe64" OUTPUT_NAME "m4lwrapperoutput~"
+set_target_properties(output PROPERTIES PREFIX "" SUFFIX ".mxe64" OUTPUT_NAME "m4lwrappergainstage~"
     RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/externals"
     LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/externals")

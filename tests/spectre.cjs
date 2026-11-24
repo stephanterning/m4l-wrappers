@@ -111,6 +111,12 @@ for (const extraTracks of [false, true]) {
         outlet:(n,...args)=>commands.push(args)});
     vm.runInContext(boxes.ctrl.code,ctx);
     ctx.load();ctx.missing();
+    const before = values.param1;
+    ctx.param(1, .99);
+    assert.equal(values.param1, before, 'An unavailable panel cannot edit a Live parameter');
+    const stored = values.bankState;
+    ctx.plugstate('late-host-snapshot');
+    assert.equal(values.bankState, stored);
     if (extraTracks) vm.runInContext('queue.set("d778",JSON.stringify(["MIX PRE-MASTER",""])); queue.set("d779",JSON.stringify(["Bass",""]))',ctx);
     vm.runInContext('queue.set("last",String(Date.now()-1500))',ctx);
     ctx.flush();

@@ -388,6 +388,7 @@ function onidleout() {
     if (menu) {menu=null;mgraphics.redraw();}
 }
 function onclick(px,py,but,cmd,shift,caps,alt,ctrl,pointer) {
+    if (state !== "ready") return;
     var p=logical(px,py),x=p[0],y=p[1],idx=nodeAt(x,y),t;
     drag=null;
     if (pointer && ((pointer.buttons & 2) || pointer.contextModifier)) {
@@ -422,6 +423,7 @@ function onclick(px,py,but,cmd,shift,caps,alt,ctrl,pointer) {
     else if (t.type==="menu") openMenu(t);
 }
 function ondrag(px,py,but,cmd,shift,caps,alt,ctrl,pointer) {
+    if (state !== "ready") return;
     if (!drag) return;
     if (!but) {drag=null;return;}
     var p=logical(px,py),x=p[0],y=p[1],dx=x-drag.x,dy=drag.y-y;
@@ -449,6 +451,7 @@ function ondrag(px,py,but,cmd,shift,caps,alt,ctrl,pointer) {
     drag.x=x;drag.y=y;
 }
 function ondblclick(px,py) {
+    if (state !== "ready") return;
     if (menu) return;
     var p=logical(px,py), t=targetAt(p[0],p[1]);
     if (t && t.type==="dial") {
