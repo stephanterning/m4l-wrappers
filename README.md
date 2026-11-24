@@ -24,7 +24,7 @@ Adjust Input, Effect, Curve and Output, and switch Clip 0 dB, Band Split and Eff
 
 Choose among five saturation styles, push Drive or engage Punish, then shape the sound with the filters and Tone control. Use Mix to blend the processed signal with the dry input.
 
-[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-decapitator-wrapper)
+[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-decapitator-wrapper) · [View on maxforlive.com](https://maxforlive.com/library/device.php?id=17424)
 
 ![Decapitator Wrapper v1.4 with style E selected, Punish engaged and automatic output trim](docs/images/decapitator.png)
 
