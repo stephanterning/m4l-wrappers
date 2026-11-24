@@ -113,5 +113,7 @@ assert.equal(snapshots,1);
 // A delayed host reply must not replace the last working bank while unavailable.
 const bank = patcher.getnamed('bankState');
 bank.value = 'previous-instance-state';
+const beforeLateReply = seen.length;
 run('plugstate("unavailable-state");');
+assert.equal(seen.length, beforeLateReply);
 assert.equal(bank.value, 'previous-instance-state');

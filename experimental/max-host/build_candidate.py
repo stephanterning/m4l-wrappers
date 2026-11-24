@@ -17,18 +17,18 @@ from package import directory
 
 CLASS = "m4lwrappergainstage~"
 PRODUCTS = {
-    "spectre": ("Spectre", -142919238, "56535453705472737065637472650000"),
-    "oxford-inflator": ("Oxford Inflator", 714868650, "5653544F494E546F78666F726420696E"),
+    "spectre": ("Spectre", "56535453705472737065637472650000"),
+    "oxford-inflator": ("Oxford Inflator", "5653544F494E546F78666F726420696E"),
 }
 
 
 def audio_graph(patch, device):
-    name, uid, cid = PRODUCTS[device.name]
+    name, cid = PRODUCTS[device.name]
     controls = (device / "Engine.mm").read_text().split(" controls = {{",1)[1].split("}};",1)[0]
     params = re.findall(r'\{\s*\d+\s*,\s*"([^"]+)"\s*\}', controls)
+    product = dict(name=name, cid=cid, parameters=params)
     if device.name == "oxford-inflator":
-        params[-1] = "Sonnox Bypass"
-    product = dict(name=name, id=uid, cid=cid, parameters=params)
+        product["aliases"] = {"Bypass": ["Bypass", "Sonnox Bypass"]}
     boxes, lines = patch["boxes"], patch["lines"]
     ids = {row["box"].get("varname"): row["box"]["id"] for row in boxes}
     boxes[:] = [r for r in boxes if r["box"]["id"] != ids["dsp"]]

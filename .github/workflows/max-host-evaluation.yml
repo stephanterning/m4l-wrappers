@@ -49,6 +49,7 @@ jobs:
           node tests/oxford.cjs
           node tests/spectre.cjs
           node tests/max-host/adapter.cjs
+          python3 tests/max-host/package_candidate.py dist build/candidates build/output/externals
       - uses: actions/upload-artifact@v4
         with:
           name: max-host-qa-devices

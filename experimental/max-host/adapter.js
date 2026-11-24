@@ -8,7 +8,7 @@ const exportPath = temp + "-export.vstpreset";
 const presetPath = temp + "-import.vstpreset";
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 let phase = "idle", state = "-", names = [], mapping = [], inverse = [];
-let identity, attempts, reportedLatency = -1, loadingStarted = false;
+let attempts, reportedLatency = -1;
 const restoreError = "The plug-in could not restore its state from this Live Set.";
 let probeValue, probeReply, probePass;
 const recallTask = new Task(importAndCheck, this);
@@ -111,28 +111,33 @@ function load(encoded) {
     phase = "discovering";
     state = String(encoded); attempts = 0;
     outlet(0, "unplug");
-    if (loadingStarted) outlet(0, "scan", 1);
-    loadingStarted = true;
+    // A fresh name lookup is silent. Max may show a global confirmation dialog for scan.
     outlet(0, "plug_vst3", product.name);
     inspectTask.schedule(250);
 }
 function inspect() {
     const id = nativeHost().getattr("currentplug");
     if (!id && ++attempts < 12) { inspectTask.schedule(250); return; }
-    if (!id) { fail("The VST3 could not be loaded by Max."); return; }
-    identity = null;
-    outlet(0, "get", -8);
-    if (identity !== product.id || !String(id).startsWith("C74_VST3:/")) {
-        fail("Max did not load the expected VST3 plug-in."); return;
-    }
+    if (!id) { fail("Check that the VST3 is installed and available to Max."); return; }
+    // Max can resolve another format with the same display name. Confirm the
+    // portable VST3 class ID from the vendor preset before enabling audio.
+    try {
+        writeFile(exportPath, []);
+        outlet(0, "write", exportPath);
+        parsePreset(readFile(exportPath));
+    } catch (error) { fail("The expected VST3 plug-in could not be loaded."); return; }
     phase = "parameters";
     names = [];
     outlet(0, "params");
-    mapping = product.parameters.map(name => names.indexOf(name) + 1);
+    mapping = product.parameters.map(name => {
+        const aliases = product.aliases && product.aliases[name] || [name];
+        const matches = names.map((candidate, i) => aliases.includes(candidate) ? i+1 : 0).filter(Boolean);
+        return matches.length === 1 ? matches[0] : 0;
+    });
     inverse = [];
     for (let i = 0; i < mapping.length; ++i) {
         const name = product.parameters[i];
-        if (!mapping[i] || names.indexOf(name) !== names.lastIndexOf(name)) {
+        if (!mapping[i]) {
             fail("The VST3 parameter “" + name + "” is missing or ambiguous."); return;
         }
         inverse[mapping[i]] = i;
@@ -197,7 +202,6 @@ function snapshot() {
     } catch (error) { error.message && post(error.message + "\n"); }
 }
 function parameterChanged(index, value) {
-    if (index === -8) { identity = value; return; }
     if (index === -10) { if (phase === "ready") setLatency(value); return; }
     const slot = inverse[index];
     if (slot === undefined || !Number.isFinite(value) || value < 0 || value > 1) return;
