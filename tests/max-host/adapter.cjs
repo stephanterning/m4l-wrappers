@@ -47,7 +47,7 @@ const globals = {Task, File, product, post(){}, patcher:{getnamed(){return {geta
             files.set(args[0],preset);
         }
     }};
-const source = fs.readFileSync(path.join(__dirname, "../../experimental/max-host/adapter.js"), "utf8");
+const source = fs.readFileSync(path.join(__dirname, "../../host/adapter.js"), "utf8");
 function instantiate(overrides = {}) {
     const instance = vm.createContext({...globals,...overrides});
     vm.runInContext(source, instance);

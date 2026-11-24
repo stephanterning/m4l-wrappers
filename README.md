@@ -45,35 +45,30 @@ git clone https://github.com/Cycling74/max-sdk-base.git deps/max-sdk-base
 git -C deps/max-sdk-base checkout c03a2922a2a8ff149165a1e2ea134e9321d6e202
 ```
 
-You can also point `MAX_SDK_BASE` at an existing checkout. With the Max SDK in place, build Decapitator directly from the repository:
+Set `MAX_SDK_BASE` to use an existing Max SDK checkout. From a clean clone, one command builds all three wrappers in `dist/`:
 
 ```sh
-python3 experimental/max-host/build_candidate.py decapitator dist/v1.4
+python3 build.py
 ```
 
-The Spectre and Oxford builders take their patch layout, Live parameter definitions and some bundled resources from the matching v1.3 device. Place those two released files in a separate directory, for example `build/v1.3/`, then run:
-
-```sh
-python3 experimental/max-host/build_candidate.py spectre "build/v1.3/Spectre Wrapper.amxd" dist/v1.4
-python3 experimental/max-host/build_candidate.py oxford-inflator "build/v1.3/Oxford Inflator Wrapper.amxd" dist/v1.4
-```
-
-These commands produce macOS devices in `dist/v1.4/`. With the v1.3 inputs available, all three builds work without Steinberg’s VST3 SDK. If you need to generate the two input devices from a fresh clone, the legacy `build.py` still uses the Steinberg SDK. The optional precision-test plug-in also uses it.
+For a single device, pass `decapitator`, `spectre` or `oxford-inflator`. Use `--output DIR` to select another output directory. All patches, parameter mappings and UI resources used by the build are in this repository.
 
 ### Include Windows x64 support
 
 Build the shared gain and meter external once on Windows using the same Max SDK checkout, Visual Studio 2022 with Desktop development with C++, and CMake 3.25 or later:
 
 ```powershell
-cmake -S experimental/max-host -B build/output -G "Visual Studio 17 2022" -A x64
+cmake -S host -B build/output -G "Visual Studio 17 2022" -A x64
 cmake --build build/output --config Release
 ```
 
-Copy `m4lwrappergainstage~.mxe64` from `build/output/externals/` to the same directory on the Mac. Append `--windows-externals build/output/externals` to each of the three Python build commands above. Each resulting `.amxd` then contains both platform binaries.
+Copy `m4lwrappergainstage~.mxe64` from `build/output/externals/` to the same directory on the Mac. Append `--windows-externals build/output/externals` to the Python build command. Each resulting `.amxd` then contains both platform binaries.
+
+The **Build and test wrappers** workflow runs this two-platform build on pushes to main and on pull requests. Its `m4l-wrappers` artifact contains all three devices.
 
 ## Development and verification
 
-The Max host adapter and shared audio code live in `experimental/max-host/`. Each wrapper’s controls, panel and configuration live under `devices/`. The common meter UI, gain linking, gain matching and missing-plug-in warnings live in `shared/`.
+The Max host adapter and shared audio code live in `host/`. Each wrapper’s controls, panel and configuration live under `devices/`. The common meter UI, gain linking, gain matching and missing-plug-in warnings live in `shared/`.
 
 When adding or updating a wrapper, preserve its Live parameter identifiers and per-instance plug-in state. Test recall by saving two differently configured instances in the previous version and reopening the Set after replacing the device at the same path. Also check automation, missing-plug-in recovery, CPU time and sample alignment against the VST3 loaded directly in Live. Include modes that change latency.
 
@@ -82,5 +77,5 @@ Run the adapter and controller checks from the repository root:
 ```sh
 node tests/max-host/adapter.cjs
 node tests/oxford.cjs
-node tests/spectre.cjs "dist/v1.4/Spectre Wrapper.amxd"
+node tests/spectre.cjs "dist/Spectre Wrapper.amxd"
 ```

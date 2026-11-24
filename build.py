@@ -1,56 +1,22 @@
-"""Build the macOS externals and freeze the device with its requested platform binaries."""
+"""Build standalone Max-host wrappers on macOS."""
 import argparse
-import concurrent.futures
 import io
 import json
 import os
 from pathlib import Path
-import shutil
+import plistlib
+import re
 import struct
 import subprocess
-import sys
+import tempfile
 import time
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-BUILD = ROOT / "build"
-sdk = Path(os.environ.get("VST3_SDK", ROOT / "deps/vst3sdk")).resolve()
+CLASS = "m4lwrappergainstage~"
+WRAPPER_VERSION = "1.4"
 headers = Path(os.environ.get("MAX_SDK_BASE", ROOT / "deps/max-sdk-base")).resolve() / "c74support"
 AMXD_HEADER = bytes.fromhex("616d706604000000616161616d657461040000000700000070746368")
-
-sdk_sources = [
-    'pluginterfaces/base/coreiids.cpp', 'pluginterfaces/base/funknown.cpp',
-    'pluginterfaces/base/ustring.cpp', 'public.sdk/source/common/commoniids.cpp',
-    'public.sdk/source/common/commonstringconvert.cpp','public.sdk/source/common/memorystream.cpp',
-    'public.sdk/source/common/threadchecker_mac.mm', 'public.sdk/source/vst/vstinitiids.cpp',
-    'public.sdk/source/vst/utility/stringconvert.cpp'
-]
-sdk_sources += ['public.sdk/source/vst/hosting/' + s for s in ['module.cpp', 'module_mac.mm',
-    'plugprovider.cpp', 'hostclasses.cpp', 'pluginterfacesupport.cpp', 'parameterchanges.cpp',
-    'connectionproxy.cpp']]
-
-def compile_external(device, name, arch):
-    out = BUILD / device.name / arch
-    out.mkdir(parents=True, exist_ok=True)
-    flags = ['clang++', '-std=c++17', '-O2', '-fvisibility=hidden', '-DNDEBUG', '-DRELEASE=1',
-             '-arch', arch, '-mmacosx-version-min=12.0', '-Wno-deprecated-declarations',
-             '-I' + str(ROOT / 'shared'), '-I' + str(sdk), '-I' + str(headers / 'max-includes'), '-I' + str(headers / 'msp-includes')]
-    def compile_source(src):
-        obj = out / (src.stem + '.o')
-        deps = [src]
-        if src.parent == device:
-            deps += [device / 'Engine.mm', device / 'Discovery.h', *sorted((ROOT / 'shared').glob('*.h'))]
-        if not obj.exists() or any(f.stat().st_mtime > obj.stat().st_mtime for f in deps):
-            subprocess.run(flags + (['-fobjc-arc'] if src.suffix == '.mm' else []) +
-                           ['-c', str(src), '-o', str(obj)], check=True)
-        return str(obj)
-    with concurrent.futures.ThreadPoolExecutor(6) as pool:
-        objects = list(pool.map(compile_source, [sdk / s for s in sdk_sources] + [device / 'external.mm']))
-    result = out / name
-    subprocess.run(flags + objects + ['-framework', 'AppKit', '-framework', 'CoreFoundation', '-framework',
-            'Foundation', '-framework', 'CoreServices'] +
-            ['-bundle','-undefined','dynamic_lookup'] + ['-o',str(result)],check=True)
-    return result
 
 def be(number):
     return struct.pack(">I",number)
@@ -99,71 +65,69 @@ def freeze(bundle, patch, path, assets, windows_binary=None):
     tmp.replace(path)
 
 
-def add_warning_overlay(patch, assets, controller):
-    panel = next(row["box"] for row in patch["boxes"] if row["box"]["varname"] == "face")
-    panel_x, _, panel_width, height = panel["presentation_rect"]
-    width = patch["devicewidth"]
-    overlay = dict(id="warning-overlay", varname="warningOverlay", maxclass="v8ui",
-                   filename="wrapper-warning-overlay.js", numinlets=1, numoutlets=1, outlettype=[""],
-                   jsarguments=[panel_x / width, panel_width / width], presentation=1,
-                   presentation_rect=[0, 0, width, height],
-                   patching_rect=[10, 1100, width, height])
-    patch["boxes"].insert(0, {"box": overlay})
-    patch["lines"].append({"patchline": {"source": [overlay["id"], 0], "destination": [controller["id"], 0]}})
-    assets[overlay["filename"]] = "shared/warning-overlay.js"
+def versioned_panel(panel, work):
+    script, count = re.subn(r'"v\d+\.\d+(?:-[\w.]+)?"', f'"v{WRAPPER_VERSION}"', panel.read_text())
+    if count != 1:
+        raise ValueError(f"Expected one visible version label in {panel.name}")
+    path = work / panel.name
+    path.write_text(script)
+    return path
 
 
-def build_device(device, windows_binary=None):
+def output_bundle(work):
+    bundle = work / (CLASS+".mxo")
+    exe = bundle/"Contents/MacOS"/CLASS
+    exe.parent.mkdir(parents=True, exist_ok=True)
+    info = dict(CFBundleExecutable=CLASS, CFBundleName=CLASS, CFBundlePackageType="iLaX",
+                CFBundleIdentifier="org.m4lwrappers.output", CFBundleVersion="1", CFBundleShortVersionString="1")
+    (bundle/"Contents/Info.plist").write_bytes(plistlib.dumps(info))
+    subprocess.run(["clang++","-std=c++17","-O2","-arch","arm64","-arch","x86_64","-mmacosx-version-min=12.0",
+                    "-bundle","-undefined","dynamic_lookup","-Wno-deprecated-declarations",
+                    "-I"+str(headers/"max-includes"),"-I"+str(headers/"msp-includes"),
+                    "-I"+str(ROOT/"shared"),str(ROOT/"host/output.cpp"),"-o",str(exe)],check=True)
+    subprocess.run(["codesign","--force","--sign","-",str(bundle)],check=True)
+    return bundle
+
+
+def build_device(device, output, work, bundle, windows):
     config = json.loads((device / "device.json").read_text())
-    name = config["external"]
-    bundle = BUILD / device.name / (name + ".mxo")
-    contents = bundle / "Contents"
-    for directory in ("MacOS", "Resources"):
-        (contents / directory).mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(device / "Info.plist", contents / "Info.plist")
-    shutil.copyfile(sdk / "pluginterfaces/LICENSE.txt", contents / "Resources/Steinberg License.txt")
-    bins = [compile_external(device, name, arch) for arch in ("arm64", "x86_64")]
-    subprocess.run(["lipo", "-create", *bins, "-output", contents / "MacOS" / name], check=True)
-    subprocess.run(["codesign", "--force", "--sign", "-", bundle], check=True)
-    subprocess.run(["codesign", "--verify", "--strict", bundle], check=True)
     patch = json.loads((device / "device.maxpat").read_text())["patcher"]
-    controller = next(row["box"] for row in patch["boxes"] if row["box"]["varname"] == "ctrl")
-    scripts = [device / "controller.js", ROOT / "shared/missing-plugin.js", ROOT / "shared/meter-controls.js"]
-    controller["code"] = "\n".join(script.read_text() for script in scripts)
-    output = ROOT / "dist" / (config["name"] + ".amxd")
-    output.parent.mkdir(exist_ok=True)
-    assets = config["resources"].copy()
-    add_warning_overlay(patch, assets, controller)
-    if device.name == "oxford-inflator":
-        skin = ROOT / assets["oxford-surface.png"]
-        if skin.is_file():
-            panel = device / "oxford-panel-v1.js"
-            generated = BUILD / device.name / panel.name
-            generated.write_text(panel.read_text().replace("var skin=null;", 'var skin=new Image("oxford-surface.png");', 1))
-            assets[panel.name] = generated
-        else:
-            del assets["oxford-surface.png"]
-            patch["boxes"] = [row for row in patch["boxes"] if row["box"].get("varname") != "panelResource"]
-    freeze(bundle, patch, output, assets, windows_binary)
-    print(output)
+    boxes = {row["box"].get("varname"): row["box"] for row in patch["boxes"]}
+    product = config["product"]
+    controller = (device / "controller.js").read_text()
+    definitions = device / "parameters.json"
+    if definitions.exists():
+        parameters = json.loads(definitions.read_text())
+        product["parameters"] = [p["vst"] for p in parameters]
+        controller = "const parameters = " + json.dumps(parameters) + ";\n" + controller
+    else:
+        controller += '\npluginEditorMessage = "openPlugin";'
+    boxes["ctrl"]["code"] = "\n".join((controller, (ROOT / "shared/missing-plugin.js").read_text(),
+                                      (ROOT / "shared/meter-controls.js").read_text()))
+    boxes["maxHostControl"]["code"] = ("const product = " + json.dumps(product) + ";\n"
+                                        + (ROOT / "host/adapter.js").read_text())
+    assets = config["resources"]
+    panel = config["panel"]
+    assets[panel] = versioned_panel(device / panel, work)
+    path = output / (config["name"] + ".amxd")
+    freeze(bundle, patch, path, assets, windows)
+    print(path)
+
 
 if __name__ == "__main__":
-    devices = ROOT / "devices"
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("devices", nargs="*", help="Device directories to build (defaults to the native-host releases)")
-    parser.add_argument("--windows-externals", type=Path, metavar="DIR",
-                        help="Also embed each Windows x64 .mxe64 from DIR")
+    parser.add_argument("devices", nargs="*", help="Device directory names (default: all)")
+    parser.add_argument("--output", type=Path, default=ROOT / "dist")
+    parser.add_argument("--windows-externals", type=Path)
     args = parser.parse_args()
-    selected = [devices / name for name in args.devices] or sorted(
-        device for device in devices.iterdir() if (device / "Engine.mm").is_file()
-    )
-    for device in selected:
-        config = json.loads((device / "device.json").read_text())
-        if config.get("host") == "max":
-            cmd = [sys.executable, str(ROOT / "experimental/max-host/build_candidate.py"), device.name, str(ROOT / "dist")]
-            if args.windows_externals:
-                cmd.extend(["--windows-externals", str(args.windows_externals)])
-            subprocess.run(cmd, check=True)
-        else:
-            binary = windows_external(args.windows_externals, config["external"]) if args.windows_externals else None
-            build_device(device, binary)
+    devices = {p.parent.name: p.parent for p in sorted((ROOT / "devices").glob("*/device.json"))}
+    selected = args.devices or list(devices)
+    if set(selected) - devices.keys():
+        parser.error("Available devices: " + ", ".join(devices))
+    windows = windows_external(args.windows_externals, CLASS) if args.windows_externals else None
+    args.output.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp)
+        bundle = output_bundle(work)
+        for name in selected:
+            build_device(devices[name], args.output, work, bundle, windows)

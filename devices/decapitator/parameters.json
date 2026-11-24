@@ -1,0 +1,110 @@
+[
+  {
+    "vst": "Style",
+    "name": "Style",
+    "choices": [
+      "A",
+      "E",
+      "N",
+      "T",
+      "P"
+    ],
+    "low": 0,
+    "high": 4,
+    "initial": 0
+  },
+  {
+    "vst": "Drive",
+    "name": "Drive",
+    "low": 0,
+    "high": 10,
+    "initial": 0,
+    "unit": 1
+  },
+  {
+    "vst": "Punish",
+    "name": "Punish",
+    "choices": [
+      "Off",
+      "On"
+    ],
+    "low": 0,
+    "high": 1,
+    "initial": 0
+  },
+  {
+    "vst": "LowCut",
+    "name": "Low Cut",
+    "low": 20,
+    "high": 1000,
+    "initial": 20,
+    "log": true,
+    "unit": 3
+  },
+  {
+    "vst": "Tone",
+    "name": "Tone",
+    "low": -12,
+    "high": 12,
+    "initial": 0,
+    "unit": 4
+  },
+  {
+    "vst": "HighCut",
+    "name": "High Cut",
+    "low": 1000,
+    "high": 20000,
+    "initial": 20000,
+    "log": true,
+    "unit": 3
+  },
+  {
+    "vst": "Mix",
+    "name": "Mix",
+    "low": 0,
+    "high": 100,
+    "initial": 100,
+    "unit": 5
+  },
+  {
+    "vst": "AutoGain",
+    "name": "AutoGain",
+    "choices": [
+      "Off",
+      "On"
+    ],
+    "low": 0,
+    "high": 1,
+    "initial": 1
+  },
+  {
+    "vst": "LowThump",
+    "name": "Thump",
+    "choices": [
+      "Off",
+      "On"
+    ],
+    "low": 0,
+    "high": 1,
+    "initial": 0
+  },
+  {
+    "vst": "HighSlope",
+    "name": "High Cut Slope",
+    "choices": [
+      "Gentle",
+      "Steep"
+    ],
+    "low": 0,
+    "high": 1,
+    "initial": 0
+  },
+  {
+    "vst": "OutputTrim",
+    "name": "OutputTrim",
+    "low": -24,
+    "high": 0,
+    "initial": 0,
+    "unit": 4
+  }
+]

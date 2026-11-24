@@ -1,10 +1,30 @@
 {
   "name": "Oxford Inflator Wrapper",
-  "external": "oxfordinflatorpeak2~",
+  "product": {
+    "name": "Oxford Inflator",
+    "cid": "5653544F494E546F78666F726420696E",
+    "parameters": [
+      "Input Gain",
+      "Effect",
+      "Curve",
+      "Output Gain",
+      "In",
+      "Band Split",
+      "Clip 0dB",
+      "Bypass"
+    ],
+    "aliases": {
+      "Bypass": [
+        "Bypass",
+        "Sonnox Bypass"
+      ]
+    }
+  },
+  "panel": "oxford-panel-v1.js",
   "resources": {
-    "oxford-surface.png": "devices/oxford-inflator/oxford-surface.png",
     "oxford-transparent.js": "shared/transparent.js",
     "oxford-meter-peak.js": "shared/meter-ui.js",
-    "oxford-panel-v1.js": "devices/oxford-inflator/oxford-panel-v1.js"
+    "oxford-panel-v1.js": "devices/oxford-inflator/oxford-panel-v1.js",
+    "wrapper-warning-overlay.js": "shared/warning-overlay.js"
   }
 }

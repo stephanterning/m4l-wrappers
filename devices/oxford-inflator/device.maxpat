@@ -37,6 +37,36 @@
     "boxes": [
       {
         "box": {
+          "id": "warning-overlay",
+          "varname": "warningOverlay",
+          "maxclass": "v8ui",
+          "filename": "wrapper-warning-overlay.js",
+          "numinlets": 1,
+          "numoutlets": 1,
+          "outlettype": [
+            ""
+          ],
+          "jsarguments": [
+            0.19523809523809524,
+            0.5047619047619047
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            0,
+            0,
+            630.0,
+            169.0
+          ],
+          "patching_rect": [
+            10,
+            1100,
+            630.0,
+            169.0
+          ]
+        }
+      },
+      {
+        "box": {
           "background": 1,
           "filename": "oxford-panel-v1.js",
           "id": "ox-face",
@@ -774,27 +804,6 @@
       },
       {
         "box": {
-          "id": "ox-dsp",
-          "maxclass": "newobj",
-          "numinlets": 2,
-          "numoutlets": 3,
-          "outlettype": [
-            "signal",
-            "signal",
-            ""
-          ],
-          "patching_rect": [
-            15.0,
-            393.0,
-            120.0,
-            20.0
-          ],
-          "text": "oxfordinflatorpeak2~",
-          "varname": "dsp"
-        }
-      },
-      {
-        "box": {
           "id": "ox-out",
           "maxclass": "newobj",
           "numinlets": 2,
@@ -875,7 +884,7 @@
               "parameter_mmax": 24.0,
               "parameter_mmin": -24.0,
               "parameter_modmode": 0,
-              "parameter_shortname": "Drive",
+              "parameter_shortname": "Pre Gain",
               "parameter_type": 0,
               "parameter_unitstyle": 4
             }
@@ -938,7 +947,7 @@
               "parameter_mmax": 24.0,
               "parameter_mmin": -24.0,
               "parameter_modmode": 0,
-              "parameter_shortname": "Output",
+              "parameter_shortname": "Post Gain",
               "parameter_type": 0,
               "parameter_unitstyle": 4
             }
@@ -1431,21 +1440,65 @@
       },
       {
         "box": {
-          "id": "ox-panelResource",
-          "maxclass": "fpic",
-          "numinlets": 1,
-          "numoutlets": 1,
-          "outlettype": [
-            "jit_matrix"
-          ],
+          "id": "maxPlugin",
+          "varname": "maxPlugin",
+          "maxclass": "newobj",
           "patching_rect": [
-            645.0,
-            700.0,
-            84.0,
-            25.0
+            320,
+            1230,
+            195,
+            22
           ],
-          "pic": "oxford-surface.png",
-          "varname": "panelResource"
+          "text": "vst~ 2 2 @prefer VST3 @autosave 0",
+          "numinlets": 2,
+          "numoutlets": 8
+        }
+      },
+      {
+        "box": {
+          "id": "driveRamp",
+          "varname": "driveRamp",
+          "maxclass": "newobj",
+          "patching_rect": [
+            65,
+            1150,
+            195,
+            22
+          ],
+          "text": "m4lwrappergainstage~ drive",
+          "numinlets": 2,
+          "numoutlets": 3
+        }
+      },
+      {
+        "box": {
+          "id": "wrapperOutput",
+          "varname": "wrapperOutput",
+          "maxclass": "newobj",
+          "patching_rect": [
+            210,
+            1280,
+            195,
+            22
+          ],
+          "text": "m4lwrappergainstage~",
+          "numinlets": 4,
+          "numoutlets": 3
+        }
+      },
+      {
+        "box": {
+          "id": "maxHostControl",
+          "varname": "maxHostControl",
+          "maxclass": "v8.codebox",
+          "patching_rect": [
+            500,
+            1230,
+            195,
+            22
+          ],
+          "numinlets": 3,
+          "numoutlets": 4
         }
       }
     ],
@@ -1669,18 +1722,6 @@
       {
         "patchline": {
           "destination": [
-            "ox-dsp",
-            0
-          ],
-          "source": [
-            "ox-ctrl",
-            0
-          ]
-        }
-      },
-      {
-        "patchline": {
-          "destination": [
             "ox-driveLinkCtl",
             0
           ],
@@ -1698,42 +1739,6 @@
           ],
           "source": [
             "ox-driveLinkCtl",
-            0
-          ]
-        }
-      },
-      {
-        "patchline": {
-          "destination": [
-            "ox-ctrl",
-            0
-          ],
-          "source": [
-            "ox-dsp",
-            2
-          ]
-        }
-      },
-      {
-        "patchline": {
-          "destination": [
-            "ox-out",
-            1
-          ],
-          "source": [
-            "ox-dsp",
-            1
-          ]
-        }
-      },
-      {
-        "patchline": {
-          "destination": [
-            "ox-out",
-            0
-          ],
-          "source": [
-            "ox-dsp",
             0
           ]
         }
@@ -1782,30 +1787,6 @@
           ],
           "source": [
             "ox-go",
-            0
-          ]
-        }
-      },
-      {
-        "patchline": {
-          "destination": [
-            "ox-dsp",
-            1
-          ],
-          "source": [
-            "ox-in",
-            1
-          ]
-        }
-      },
-      {
-        "patchline": {
-          "destination": [
-            "ox-dsp",
-            0
-          ],
-          "source": [
-            "ox-in",
             0
           ]
         }
@@ -2015,6 +1996,234 @@
             0
           ]
         }
+      },
+      {
+        "patchline": {
+          "source": [
+            "warning-overlay",
+            0
+          ],
+          "destination": [
+            "ox-ctrl",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "ox-in",
+            0
+          ],
+          "destination": [
+            "driveRamp",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "driveRamp",
+            0
+          ],
+          "destination": [
+            "maxPlugin",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "ox-in",
+            0
+          ],
+          "destination": [
+            "wrapperOutput",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "maxPlugin",
+            0
+          ],
+          "destination": [
+            "wrapperOutput",
+            2
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "wrapperOutput",
+            0
+          ],
+          "destination": [
+            "ox-out",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "ox-in",
+            1
+          ],
+          "destination": [
+            "driveRamp",
+            1
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "driveRamp",
+            1
+          ],
+          "destination": [
+            "maxPlugin",
+            1
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "ox-in",
+            1
+          ],
+          "destination": [
+            "wrapperOutput",
+            1
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "maxPlugin",
+            1
+          ],
+          "destination": [
+            "wrapperOutput",
+            3
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "wrapperOutput",
+            1
+          ],
+          "destination": [
+            "ox-out",
+            1
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "ox-ctrl",
+            0
+          ],
+          "destination": [
+            "maxHostControl",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "maxHostControl",
+            0
+          ],
+          "destination": [
+            "maxPlugin",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "maxHostControl",
+            1
+          ],
+          "destination": [
+            "ox-ctrl",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "maxHostControl",
+            2
+          ],
+          "destination": [
+            "driveRamp",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "maxHostControl",
+            3
+          ],
+          "destination": [
+            "wrapperOutput",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "maxPlugin",
+            2
+          ],
+          "destination": [
+            "maxHostControl",
+            1
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "maxPlugin",
+            3
+          ],
+          "destination": [
+            "maxHostControl",
+            2
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "wrapperOutput",
+            2
+          ],
+          "destination": [
+            "ox-ctrl",
+            0
+          ]
+        }
       }
     ],
     "parameters": {
@@ -2070,12 +2279,12 @@
       ],
       "ox-postOutput": [
         "Output Trim",
-        "Output",
+        "Post Gain",
         0
       ],
       "ox-preDrive": [
         "Drive",
-        "Drive",
+        "Pre Gain",
         0
       ],
       "parameterbanks": {

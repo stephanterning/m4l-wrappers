@@ -1,9 +1,55 @@
 {
   "name": "Spectre Wrapper",
-  "external": "spectrewrapper2~",
+  "product": {
+    "name": "Spectre",
+    "cid": "56535453705472737065637472650000",
+    "parameters": [
+      "LowShelf Frequency",
+      "LowShelf Gain",
+      "LowShelf Q",
+      "LowShelf Switch",
+      "LowShelf Color",
+      "LowShelf Processing",
+      "Peak 01 Frequency",
+      "Peak 01 Gain",
+      "Peak 01 Q",
+      "Peak 01 Switch",
+      "Peak 01 Color",
+      "Peak 01 Processing",
+      "Peak 02 Frequency",
+      "Peak 02 Gain",
+      "Peak 02 Q",
+      "Peak 02 Switch",
+      "Peak 02 Color",
+      "Peak 02 Processing",
+      "Peak 03 Frequency",
+      "Peak 03 Gain",
+      "Peak 03 Q",
+      "Peak 03 Switch",
+      "Peak 03 Color",
+      "Peak 03 Processing",
+      "HighShelf Frequency",
+      "HighShelf Gain",
+      "HighShelf Q",
+      "HighShelf Switch",
+      "HighShelf Color",
+      "HighShelf Processing",
+      "Input",
+      "Output",
+      "Dry Wet",
+      "Input Compensation",
+      "Quality",
+      "De-Emphasis",
+      "Mode",
+      "Processing",
+      "Bypass"
+    ]
+  },
+  "panel": "spectre-bands-v1.js",
   "resources": {
     "spectre-bands-v1.js": "devices/spectre/spectre-bands-v1.js",
     "spectre-meter-v1.js": "shared/meter-ui.js",
-    "spectre-transparent.js": "shared/transparent.js"
+    "spectre-transparent.js": "shared/transparent.js",
+    "wrapper-warning-overlay.js": "shared/warning-overlay.js"
   }
 }

@@ -1,6 +1,6 @@
 # Max VST3 host evaluation
 
-The candidates load the commercial VST3 using Max’s documented `plug_vst3` message. A Max external handles stereo gain, dry routing and the existing meters. It does not locate, load or run VST3 modules. The normal build continues to use the v1.3 host. Candidates have the released filenames so an isolated copy of an existing Live Set can exercise an in-place upgrade.
+The following measurements were collected during the transition from the v1.3 native host to Max. For current build and test instructions see the [project README](../../README.md).
 
 ## Release decision
 
@@ -29,21 +29,13 @@ Values are median audio-thread microseconds between test devices before and afte
 
 Run the following from the repository root. Use a temporary working area, a scratch Max instance and a copy of the Live Set. Keep commercial plug-ins, personal presets, recordings and absolute machine paths outside Git.
 
-1. Build the normal device using the repository build process, or use the actual released file. Build an isolated candidate:
-
-   ```sh
-   python3 experimental/max-host/build_candidate.py spectre "/path/to/Spectre Wrapper.amxd" build/candidates
-   ```
-
-   Use `oxford-inflator` with its matching file for Oxford. Supply `--windows-externals DIR` to include the Windows output stage. The branch workflow also produces two-platform QA artifacts.
-2. To collect Max discovery, parameter, snapshot and impulse events, pass the executable of a dedicated Max instance, a product, a locally extracted v1.3 component state and a result file. The runner briefly enables DSP and mutes its output. The result file and exported native snapshot can contain local information.
+1. To collect Max discovery, parameter, snapshot and impulse events, pass the executable of a dedicated Max instance, a product, a locally extracted v1.3 component state and a result file. The runner briefly enables DSP and mutes its output. The result file and exported native snapshot can contain local information.
 
    ```sh
    python3 tests/max-host/probe.py "/path/to/Max" spectre "/path/to/component.bin" "/tmp/host-events.jsonl"
    ```
 
-   `inspect-state.mm` reads the same component using the released engine, one normalized parameter per line. Compile it against the release’s SDK objects and device include directory on macOS. Define `TEST_OXFORD` for Oxford.
-3. To test precision negotiation independently of a commercial VST3, configure `tests/max-host/precision` with `-DVST3_SDK=/path/to/full/vst3sdk`, and build the `MaxHostPrecision` target. Run the probe with `--precision --plugin-path /path/to/MaxHostPrecision.vst3`. A unit impulse becomes +0.5 for 64-bit processing and -0.5 for 32-bit. A dry +1 pulse is a failed test.
-4. Run adapter checks with `node tests/max-host/adapter.cjs`. Run `tests/max-host/package_candidate.py` on the release directory, two-platform candidate directory and Windows external directory to check the frozen files.
+2. To test precision negotiation independently of a commercial VST3, configure `tests/max-host/precision` with `-DVST3_SDK=/path/to/full/vst3sdk`, and build the `MaxHostPrecision` target. Run the probe with `--precision --plugin-path /path/to/MaxHostPrecision.vst3`. A unit impulse becomes +0.5 for 64-bit processing and -0.5 for 32-bit. A dry +1 pulse is a failed test.
+3. Run adapter checks with `node tests/max-host/adapter.cjs`. Run `python3 tests/package.py dist build/output/externals` after building the two-platform devices to check the frozen files.
 
 The Max interfaces used here are documented in [Cycling ’74’s vst~ reference](https://docs.cycling74.com/reference/vst~/). The binary preset layout follows [Steinberg’s VST3 preset format](https://steinbergmedia.github.io/vst3_dev_portal/pages/Technical+Documentation/Locations+Format/Preset+Format.html).

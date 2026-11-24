@@ -1,5 +1,6 @@
-"""Verify both frozen devices against their built Windows and macOS externals."""
+"""Verify frozen Max-host devices against their built Windows and macOS externals."""
 import argparse
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -38,35 +39,51 @@ def directory(data):
     return entries
 
 
-def check_device(device, windows_dir):
-    config = json.loads((device / "device.json").read_text())
-    name = config["external"]
-    filename = config["name"] + ".amxd"
-    files = directory((ROOT / "dist" / filename).read_bytes())
-    assert files[name + ".mxe64"] == (b"mx64", (windows_dir / (name + ".mxe64")).read_bytes())
-    assert files[name + ".mxo"] == (b"iLaX", bytes(4))
-    mac_name = name + ".mxo/Contents/MacOS/" + name
-    mac = (ROOT / "build" / device.name / mac_name).read_bytes()
-    assert files[name + "/executable"][1] == mac
-    # CPU types in the universal Mach-O header (x86_64 and arm64).
-    magic, arch_count = struct.unpack_from(">II", mac)
-    assert magic == 0xcafebabe
-    assert {struct.unpack_from(">I", mac, 8 + 20*i)[0] for i in range(arch_count)} == {0x01000007, 0x0100000c}
-    with zipfile.ZipFile(io.BytesIO(files[name + "/zipfile"][1])) as bundle:
-        assert bundle.read(mac_name) == mac
-        assert bundle.read(name + ".mxo/Contents/Info.plist") == files[name + "/plist"][1]
-    kind, data = files[filename]
-    assert kind == b"JSON"
-    patch = json.loads(data.rstrip(b"\0"))["patcher"]
-    boxes = {entry["box"].get("varname"): entry["box"] for entry in patch["boxes"]}
-    assert boxes["dsp"]["text"] == name
-    assert boxes["bankState"]["restore"] == ["none"]
-    print(f"{filename}: verified Mac universal and Windows x64 external payloads")
+def compatibility_signature(patch):
+    # Captured from the public v1.4 devices. Covers automation identities,
+    # parameter metadata, initial values, preset storage and Live parameter banks.
+    parameters = [row["box"] for row in patch["boxes"]
+                  if "valueof" in row["box"].get("saved_attribute_attributes", {})]
+    data = json.dumps([patch["parameters"], parameters], sort_keys=True).encode()
+    return hashlib.sha256(data).hexdigest()
+
+
+def verify(candidate, windows, expected):
+    files = directory(candidate.read_bytes())
+    after = json.loads(files[candidate.name][1].rstrip(b"\0"))["patcher"]
+    assert compatibility_signature(after) == expected, "v1.4 parameter contract changed"
+    boxes = {r["box"]["id"]: r["box"] for r in after["boxes"]}
+    names = {b.get("varname"): b["id"] for b in boxes.values()}
+    edges = {(tuple(l["patchline"]["source"]),tuple(l["patchline"]["destination"])) for l in after["lines"]}
+    assert all(a in boxes and b in boxes for (a,_),(b,_) in edges)
+    assert boxes["maxPlugin"]["text"].startswith("vst~ 2 2 @prefer VST3")
+    assert boxes[names["bankState"]]["restore"] == ["none"]
+    assert boxes["wrapperOutput"]["text"] == "m4lwrappergainstage~"
+    assert boxes["driveRamp"]["text"] == "m4lwrappergainstage~ drive"
+    for ch in (0,1):
+        for edge in [((names["in"],ch),("wrapperOutput",ch)), ((names["in"],ch),("driveRamp",ch)),
+                     (("driveRamp",ch),("maxPlugin",ch)), (("maxPlugin",ch),("wrapperOutput",ch+2)),
+                     (("wrapperOutput",ch),(names["out"],ch))]:
+            assert edge in edges, edge
+    classname = "m4lwrappergainstage~"
+    assert files[classname+".mxe64"] == (b"mx64",(windows/(classname+".mxe64")).read_bytes())
+    image = files[classname+"/executable"][1]
+    assert struct.unpack_from(">II",image) == (0xcafebabe,2)
+    assert {struct.unpack_from(">I",image,i)[0] for i in [8,28]} == {0x01000007,0x0100000c}
+    with zipfile.ZipFile(io.BytesIO(files[classname+"/zipfile"][1])) as archive:
+        assert archive.read(classname+".mxo/Contents/MacOS/"+classname) == image
+    assert not any("spectrewrapper2~" in n or "oxfordinflatorpeak2~" in n for n in files)
+    for b in boxes.values():
+        if b.get("maxclass") in ("jsui","v8ui"): assert b["filename"] in files
+        if b.get("jspainterfile"): assert b["jspainterfile"] in files
+    print(candidate.name, "verified parameter identities, signal routing, resources and both platform payloads")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--windows-externals", type=Path, required=True)
+    parser.add_argument("devices", type=Path)
+    parser.add_argument("windows", type=Path)
     args = parser.parse_args()
-    for device in sorted((ROOT / "devices").iterdir()):
-        check_device(device, args.windows_externals)
+    signatures = json.loads(Path(__file__).with_name("v1.4-parameters.json").read_text())
+    for name, signature in signatures.items():
+        verify(args.devices / name, args.windows, signature)
