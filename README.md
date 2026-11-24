@@ -8,7 +8,7 @@ Each v1.4 download contains a single `.amxd`. Install the corresponding licensed
 
 Drag five colour-coded bands to shape saturation by frequency. Each band has its own saturation type and channel selection.
 
-[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-spectre-wrapper) · [View on maxforlive.com](https://maxforlive.com/library/device/17366/spectre-wrapper)
+[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-spectre-wrapper) · [View on maxforlive.com](https://maxforlive.com/library/device/17391/spectre-wrapper)
 
 ![Spectre Wrapper v1.4 with five saturation curves and the controls for band 3](docs/images/spectre.png)
 
@@ -16,7 +16,7 @@ Drag five colour-coded bands to shape saturation by frequency. Each band has its
 
 Adjust Input, Effect, Curve and Output, and switch Clip 0 dB, Band Split and Effect In directly from the device panel.
 
-[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-oxfird-inflator-wrapper) · [View on maxforlive.com](https://maxforlive.com/library/device/17365/oxford-inflator-wrapper)
+[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-oxfird-inflator-wrapper) · [View on maxforlive.com](https://maxforlive.com/library/device/17392/oxford-inflator-wrapper)
 
 ![Oxford Inflator Wrapper v1.4 with its four faders between the input and output meters](docs/images/oxford-inflator.png)
 
