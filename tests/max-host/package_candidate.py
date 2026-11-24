@@ -24,7 +24,13 @@ def parameters(patch):
 def verify(release, candidate, windows):
     before, _ = patch_and_files(release)
     after, files = patch_and_files(candidate)
-    assert parameters(after) == parameters(before), "Live parameter IDs or saved defaults changed"
+    expected = parameters(before)
+    for box in expected.values():
+        label = {"preDrive": "Pre Gain", "postOutput": "Post Gain"}.get(box.get("varname"))
+        if label:
+            box["saved_attribute_attributes"]["valueof"]["parameter_shortname"] = label
+            assert after["parameters"][box["id"]][1] == label
+    assert parameters(after) == expected, "Live parameter IDs or saved defaults changed"
     boxes = {r["box"]["id"]: r["box"] for r in after["boxes"]}
     names = {b.get("varname"): b["id"] for b in boxes.values()}
     edges = {(tuple(l["patchline"]["source"]),tuple(l["patchline"]["destination"])) for l in after["lines"]}

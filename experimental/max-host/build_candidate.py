@@ -16,7 +16,7 @@ import build
 from package import directory
 
 CLASS = "m4lwrappergainstage~"
-BETA_VERSION = "1.4-b1"
+WRAPPER_VERSION = "1.4"
 PRODUCTS = {
     "spectre": ("Spectre", "56535453705472737065637472650000"),
     "oxford-inflator": ("Oxford Inflator", "5653544F494E546F78666F726420696E"),
@@ -25,7 +25,7 @@ MAX_ONLY = ("decapitator",)
 
 
 def versioned_panel(panel, work):
-    script, count = re.subn(r'"v\d+\.\d+(?:-[\w.]+)?"', f'"v{BETA_VERSION}"', panel.read_text())
+    script, count = re.subn(r'"v\d+\.\d+(?:-[\w.]+)?"', f'"v{WRAPPER_VERSION}"', panel.read_text())
     if count != 1:
         raise ValueError(f"Expected one visible version label in {panel.name}")
     path = work / panel.name
@@ -103,6 +103,13 @@ def make(device, source, output, windows):
         raise ValueError("The supplied device does not match the selected product.")
     files = directory(source.read_bytes())
     patch = json.loads(files[source.name][1].rstrip(b"\0"))["patcher"]
+    gain_labels = {"preDrive": "Pre Gain", "postOutput": "Post Gain"}
+    for row in patch["boxes"]:
+        box = row["box"]
+        label = gain_labels.get(box.get("varname"))
+        if label:
+            box["saved_attribute_attributes"]["valueof"]["parameter_shortname"] = label
+            patch["parameters"][box["id"]][1] = label
     controller = next(row["box"] for row in patch["boxes"] if row["box"].get("varname") == "ctrl")
     controller["code"] = "\n".join((
         (device / "controller.js").read_text(),
