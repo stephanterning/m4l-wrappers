@@ -4,7 +4,7 @@ The candidates load the commercial VST3 using Max’s documented `plug_vst3` mes
 
 ## Release decision
 
-Keep the native host for both products for now. Oxford’s full Max-host chain exceeded the released wrapper’s processing time with Band Split both off and on. Spectre exceeded its reference range in Good quality in two rounds of measurements, including a repeat with the stereo Drive stage optimized. The performance gate requires the complete device to stay within repeat variation of v1.3. There is no Max-host distribution release.
+Use Max’s named VST3 lookup as the target for both wrappers. The measured overhead versus v1.3 is acceptable in exchange for using the same discovery code on macOS and Windows. At the tested block size Oxford added about 7–10 microseconds per block and Spectre about 0.5–3.2. The candidates remain QA builds pending verification of state recovery after saving and reopening a set with a missing plug-in. Custom plug-in folders and playback in Live on Windows still need real-host coverage.
 
 | Device and mode | Direct VST3 | v1.3 | Max-host candidate |
 | --- | ---: | ---: | ---: |
