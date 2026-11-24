@@ -34,7 +34,11 @@ const context = {Task, File, product, post(){}, patcher:{getnamed(){return {geta
             context.inlet = 0;
         }
         if (op === "read" && !corruptRead) readParameter = storedValue;
-        if (op === "write") files.set(args[0],Array.from(context.legacyPreset([50,60,70])));
+        if (op === "write") {
+            const preset = Array.from(context.legacyPreset([50,60,70]));
+            if (wrong) preset[8] = 88;
+            files.set(args[0],preset);
+        }
     }};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname,"../../experimental/max-host/adapter.js"),"utf8"),context);
@@ -55,7 +59,18 @@ context.snapshot();assert.ok(was(1,"plugstate",Buffer.from([50,60,70]).toString(
 for(const failure of ["absent","wrong","missing parameter","corrupt preset","unconfirmed restore"]){
     reset();installed=failure!=="absent";wrong=failure==="wrong";missingParameter=failure==="missing parameter";corruptRead=failure==="unconfirmed restore";
     context.load(failure==="corrupt preset"?"bad!":"AQID");drain();context.snapshot();
+    assert.ok(!events.some(e => e[1] === "scan"), "Retry must not open a Max scan dialog");
     assert.ok(was(3,"wet",0) && events.some(e=>e[1]==="loaderror") && !events.some(e=>["ready","plugstate"].includes(e[1])),failure);
 }
 reset();installed=true;wrong=false;missingParameter=false;corruptRead=false;context.load("AQID");drain();assert.ok(was(1,"ready"));
 console.log("Max host adapter checks passed");
+
+// A saved Live Set contains the last good token even if the device stays missing
+// through a save and relaunch. A fresh adapter can subsequently load that token.
+const lastGood=Buffer.from([50,60,70]).toString("base64");
+let saved=lastGood;
+installed=false;reset();context.load(saved);drain();context.snapshot();
+assert.ok(!events.some(e=>e[1]==="plugstate"));
+const reopened=JSON.parse(JSON.stringify({bank:saved}));installed=true;reset();
+context.load(reopened.bank);drain();
+assert.ok(was(1,"ready") && was(3,"wet",1));
