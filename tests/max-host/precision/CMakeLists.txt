@@ -5,6 +5,7 @@ set(SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF CACHE BOOL "")
 set(SMTG_ENABLE_VSTGUI_SUPPORT OFF CACHE BOOL "")
 set(SMTG_CREATE_PLUGIN_LINK OFF CACHE BOOL "")
 set(SMTG_RUN_VST_VALIDATOR OFF CACHE BOOL "")
+file(TO_CMAKE_PATH "${VST3_SDK}" VST3_SDK)
 add_subdirectory("${VST3_SDK}" sdk EXCLUDE_FROM_ALL)
 smtg_add_vst3plugin(MaxHostPrecision precision.cpp
     "${VST3_SDK}/public.sdk/source/vst/vstsinglecomponenteffect.cpp")
