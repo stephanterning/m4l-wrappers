@@ -1,0 +1,195 @@
+// The builder supplies the documented plug-in name, Max unique ID, VST3 class ID and parameter names.
+inlets = 3;
+outlets = 4; // vst~, wrapper events, Drive line~, output stage
+const patch = this.patcher;
+const nativeHost = () => patch.getnamed("maxPlugin");
+const temp = "Tempfolder:/m4l-host-" + Date.now() + "-" + Math.floor(Math.random() * 0x100000000).toString(16);
+const exportPath = temp + "-export.vstpreset";
+const presetPath = temp + "-import.vstpreset";
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+let phase = "idle", state = "-", names = [], mapping = [], inverse = [];
+let identity, attempts, reportedLatency = -1, loadingStarted = false;
+let recallNotification = false;
+const inspectTask = new Task(inspect, this);
+const finishTask = new Task(finish, this);
+const latencyTask = new Task(function () { if (phase === "ready") outlet(0, "get", -10); }, this);
+
+function encode(bytes) {
+    let result = "";
+    for (let i = 0; i < bytes.length; i += 3) {
+        const bits = (bytes[i] << 16) | ((bytes[i+1] || 0) << 8) | (bytes[i+2] || 0);
+        result += alphabet[bits >>> 18] + alphabet[(bits >>> 12) & 63] +
+            (i+1 < bytes.length ? alphabet[(bits >>> 6) & 63] : "=") +
+            (i+2 < bytes.length ? alphabet[bits & 63] : "=");
+    }
+    return result;
+}
+function decode(text) {
+    if (!text || text.length > 349528 || text.length % 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(text)) throw Error("Invalid saved state.");
+    const bytes = [];
+    for (let i = 0; i < text.length; i += 4) {
+        let bits = 0;
+        for (let j = 0; j < 4; j++) bits = (bits << 6) | Math.max(0, alphabet.indexOf(text[i+j]));
+        bytes.push((bits >>> 16) & 255);
+        if (text[i+2] !== "=") bytes.push((bits >>> 8) & 255);
+        if (text[i+3] !== "=") bytes.push(bits & 255);
+    }
+    return bytes;
+}
+function writeFile(path, bytes) {
+    const f = new File(path, "write");
+    try {
+        if (!f.isopen) throw Error("Could not open the temporary preset.");
+        f.eof = 0;
+        for (let i = 0; i < bytes.length; i += 4096) f.writebytes(bytes.slice(i, i+4096));
+        if (f.position !== bytes.length) throw Error("Could not write the temporary preset.");
+    } finally { f.close(); }
+}
+function bytesOf(text) { return Array.from(text, c => c.charCodeAt(0)); }
+function little(value, n) {
+    const bytes = [];
+    while (n--) { bytes.push(value % 256); value = Math.floor(value / 256); }
+    return bytes;
+}
+function legacyPreset(bytes) {
+    return bytesOf("VST3").concat(little(1,4),bytesOf(product.cid),little(48+bytes.length,8),bytes,
+        bytesOf("List"),little(1,4),bytesOf("Comp"),little(48,8),little(bytes.length,8));
+}
+// The VST3 preset directory uses little-endian 64-bit offsets. Reject unsafe indexes
+// before extracting the vendor's opaque component or handing a saved preset to Max.
+function parsePreset(bytes) {
+    function tag(at, size) { return String.fromCharCode(...bytes.slice(at, at + size)); }
+    function integer(at, size) {
+        if (at < 0 || at + size > bytes.length) throw Error("Incomplete VST3 directory.");
+        let value = 0;
+        for (let i = size-1; i >= 0; i--) value = value * 256 + bytes[at+i];
+        if (!Number.isSafeInteger(value)) throw Error("Invalid VST3 offset.");
+        return value;
+    }
+    if (bytes.length < 76 || tag(0,4) !== "VST3" || integer(4,4) !== 1 ||
+        tag(8,32).toUpperCase() !== product.cid) throw Error("Unexpected VST3 preset.");
+    const at = integer(40,8);
+    if (at < 48 || tag(at,4) !== "List") throw Error("Invalid VST3 directory.");
+    const count = integer(at+4,4);
+    if (count > (bytes.length-at-8)/20) throw Error("Incomplete VST3 directory.");
+    let component, otherState = false;
+    for (let i = 0; i < count; i++) {
+        const ix = at + 8 + 20*i, name = tag(ix,4);
+        const offset = integer(ix+4,8), length = integer(ix+12,8);
+        if (offset < 48 || offset > at || length > at-offset) throw Error("Invalid VST3 chunk.");
+        if (name === "Comp") {
+            if (component || !length) throw Error("Invalid VST3 component state.");
+            component = bytes.slice(offset, offset+length);
+        } else if (length && name !== "Info") otherState = true;
+    }
+    if (!component) throw Error("No VST3 component state.");
+    return {component, otherState};
+}
+function readFile(path) {
+    const f = new File(path, "read");
+    try {
+        if (!f.isopen || f.eof <= 0 || f.eof > 262144) throw Error("The plug-in snapshot could not be read.");
+        return f.readbytes(f.eof);
+    } finally { f.close(); }
+}
+function setLatency(value) {
+    if (value === reportedLatency) return;
+    reportedLatency = value;
+    outlet(1, "latency", value);
+}
+function fail(detail) {
+    phase = "failed";
+    outlet(3, "wet", 0);
+    setLatency(0);
+    outlet(1, "loaderror", detail);
+}
+function load(encoded) {
+    inspectTask.cancel(); finishTask.cancel(); latencyTask.cancel();
+    outlet(3, "wet", 0); setLatency(0);
+    phase = "discovering";
+    state = String(encoded); attempts = 0;
+    outlet(0, "unplug");
+    if (loadingStarted) outlet(0, "scan", 1);
+    loadingStarted = true;
+    outlet(0, "plug_vst3", product.name);
+    inspectTask.schedule(250);
+}
+function inspect() {
+    const id = nativeHost().getattr("currentplug");
+    if (!id && ++attempts < 12) { inspectTask.schedule(250); return; }
+    if (!id) { fail("The VST3 could not be loaded by Max."); return; }
+    identity = null;
+    outlet(0, "get", -8);
+    if (identity !== product.id || !String(id).startsWith("C74_VST3:/")) {
+        fail("Max did not load the expected VST3 plug-in."); return;
+    }
+    phase = "parameters";
+    names = [];
+    outlet(0, "params");
+    mapping = product.parameters.map(name => names.indexOf(name) + 1);
+    inverse = [];
+    for (let i = 0; i < mapping.length; ++i) {
+        const name = product.parameters[i];
+        if (!mapping[i] || names.indexOf(name) !== names.lastIndexOf(name)) {
+            fail("The VST3 parameter “" + name + "” is missing or ambiguous."); return;
+        }
+        inverse[mapping[i]] = i;
+    }
+    phase = "restoring"; recallNotification = false;
+    try {
+        if (state !== "-") {
+            const full = state.startsWith("preset1_");
+            const bytes = full ? decode(state.slice(8)) : legacyPreset(decode(state));
+            parsePreset(bytes);
+            writeFile(presetPath, bytes);
+            outlet(0, "read", presetPath);
+        }
+    } catch (error) { fail("The plug-in could not restore the saved settings for this instance."); return; }
+    finishTask.schedule(120);
+}
+function finish() {
+    if (phase !== "restoring") return;
+    if (state !== "-" && !recallNotification) {
+        fail("Max did not confirm that the saved settings were applied."); return;
+    }
+    phase = "ready";
+    outlet(1, "ready"); // The existing controller synchronizes the Live-automated parameters.
+    outlet(0, "get", -10);
+    outlet(3, "wet", 1);
+}
+function snapshot() {
+    if (phase !== "ready") return;
+    try {
+        // Start from an empty destination so a failed write cannot return a previous snapshot.
+        writeFile(exportPath, []);
+        outlet(0, "write", exportPath);
+        const bytes = readFile(exportPath), chunks = parsePreset(bytes);
+        // The two current VST3s export only component state. In that case the stored
+        // symbol stays readable by v1.3, without a format conversion on Live Set save.
+        outlet(1, "plugstate", chunks.otherState ? "preset1_" + encode(bytes) : encode(chunks.component));
+    } catch (error) { error.message && post(error.message + "\n"); }
+}
+function parameterChanged(index, value) {
+    if (index === -8) { identity = value; return; }
+    if (index === -10) { if (phase === "ready") setLatency(value); return; }
+    const slot = inverse[index];
+    if (slot === undefined || !Number.isFinite(value) || value < 0 || value > 1) return;
+    if (phase === "restoring") { recallNotification = true; return; }
+    if (phase !== "ready") return;
+    outlet(1, "edited", slot, value);
+    if (product.parameters[slot] === "Quality") latencyTask.schedule(30);
+}
+function anything() {
+    if (inlet === 1 && phase === "parameters") names.push(messagename);
+}
+function list(index, value) { if (inlet === 2) parameterChanged(index, value); }
+function param(slot, value) {
+    if (phase !== "ready" || !mapping[slot]) return;
+    outlet(0, [mapping[slot], value]);
+    if (product.parameters[slot] === "Quality") latencyTask.schedule(30);
+}
+function open() { if (phase === "ready") outlet(0, "open"); }
+function drive(db) { outlet(2, [Math.pow(10, db/20),5]); }
+function output(db) { outlet(3, "output", db); }
+function metering(token) { outlet(3, "metering", token); }
+function notifydeleted() { inspectTask.cancel(); finishTask.cancel(); latencyTask.cancel(); }
