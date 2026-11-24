@@ -1,6 +1,6 @@
 # M4L Wrappers
 
-Standalone Max for Live audio effects for controlling installed plug-ins from Ableton Live’s Device View. The first two devices host the VST3 editions of Wavesfactory Spectre and Sonnox Oxford Inflator. Each cross-platform device is a single `.amxd` for macOS (Apple Silicon or Intel) and Windows x64 (Intel or AMD). Install the corresponding licensed VST3 on each computer, then open the device in Live with Max for Live.
+Standalone Max for Live audio effects for controlling installed plug-ins from Ableton Live’s Device View. The first two devices host the VST3 editions of Wavesfactory Spectre and Sonnox Oxford Inflator. Starting with v1.3, each device ships as a single `.amxd` for macOS (Apple Silicon or Intel) and Windows x64 (Intel or AMD). Install the corresponding licensed VST3 on each computer, then open the device in Live with Max for Live.
 
 ## Spectre Wrapper
 
