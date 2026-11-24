@@ -1,4 +1,4 @@
-// The builder supplies the documented plug-in name, Max unique ID, VST3 class ID and parameter names.
+// The builder supplies the documented plug-in name, VST3 class ID and parameter names.
 inlets = 3;
 outlets = 4; // vst~, wrapper events, stereo Drive, output stage
 const patch = this.patcher;
@@ -199,7 +199,7 @@ function snapshot() {
         // The two current VST3s export only component state. In that case the stored
         // symbol stays readable by v1.3, without a format conversion on Live Set save.
         outlet(1, "plugstate", chunks.otherState ? "preset1_" + encode(bytes) : encode(chunks.component));
-    } catch (error) { error.message && post(error.message + "\n"); }
+    } catch (error) { post("Could not capture the plug-in state: " + error.message + "\n"); }
 }
 function parameterChanged(index, value) {
     if (index === -10) { if (phase === "ready") setLatency(value); return; }

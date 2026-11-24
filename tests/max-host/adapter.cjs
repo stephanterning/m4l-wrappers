@@ -22,7 +22,7 @@ class File {
 const product = {id: 17, cid:"0123456789ABCDEF0123456789ABCDEF", name:"Fixture", parameters:["Gain","Quality"]};
 let storedValue = 0.7, readParameter = 0;
 let installed = true, wrong = false, missingParameter = false, corruptRead = false;
-const context = {Task, File, product, post(){}, patcher:{getnamed(){return {getattr(){return installed ? ["C74_VST3:/Fixture",17]:null;}};}},
+const globals = {Task, File, product, post(){}, patcher:{getnamed(){return {getattr(){return installed ? ["C74_VST3:/Fixture",17]:null;}};}},
     outlet(out, op, ...args) {
         events.push([out,op,...args]);
         if (out !== 0) return;
@@ -40,8 +40,13 @@ const context = {Task, File, product, post(){}, patcher:{getnamed(){return {geta
             files.set(args[0],preset);
         }
     }};
-vm.createContext(context);
-vm.runInContext(fs.readFileSync(path.join(__dirname,"../../experimental/max-host/adapter.js"),"utf8"),context);
+const source = fs.readFileSync(path.join(__dirname, "../../experimental/max-host/adapter.js"), "utf8");
+function instantiate() {
+    const instance = vm.createContext({...globals});
+    vm.runInContext(source, instance);
+    return instance;
+}
+let context = instantiate();
 function drain(){ while(jobs.length) jobs.shift().run(); }
 function reset(){events.length=0;}
 function was(out,op,...args) {return events.some(e=>JSON.stringify(e)===JSON.stringify([out,op,...args]));}
@@ -63,14 +68,24 @@ for(const failure of ["absent","wrong","missing parameter","corrupt preset","unc
     assert.ok(was(3,"wet",0) && events.some(e=>e[1]==="loaderror") && !events.some(e=>["ready","plugstate"].includes(e[1])),failure);
 }
 reset();installed=true;wrong=false;missingParameter=false;corruptRead=false;context.load("AQID");drain();assert.ok(was(1,"ready"));
-console.log("Max host adapter checks passed");
+
 
 // A saved Live Set contains the last good token even if the device stays missing
 // through a save and relaunch. A fresh adapter can subsequently load that token.
-const lastGood=Buffer.from([50,60,70]).toString("base64");
-let saved=lastGood;
-installed=false;reset();context.load(saved);drain();context.snapshot();
-assert.ok(!events.some(e=>e[1]==="plugstate"));
-const reopened=JSON.parse(JSON.stringify({bank:saved}));installed=true;reset();
-context.load(reopened.bank);drain();
+const lastGood = Buffer.from([50,60,70]).toString("base64");
+const savedFile = JSON.stringify({bank:lastGood});
+for (let reopen = 0; reopen < 2; ++reopen) {
+    context = instantiate();
+    installed = false;
+    reset();
+    context.load(JSON.parse(savedFile).bank);
+    drain();
+    context.snapshot();
+    assert.ok(!events.some(e => e[1] === "plugstate") && was(3,"wet",0));
+}
+installed = true;
+reset();
+context.load(JSON.parse(savedFile).bank);
+drain();
 assert.ok(was(1,"ready") && was(3,"wet",1));
+console.log("Max host adapter and saved-state checks passed");

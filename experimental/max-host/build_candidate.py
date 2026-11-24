@@ -78,6 +78,8 @@ def output_bundle(work):
 
 def make(device, source, output, windows):
     config = json.loads((device/"device.json").read_text())
+    if source.name != config["name"] + ".amxd":
+        raise ValueError("The supplied device does not match the selected product.")
     files = directory(source.read_bytes())
     patch = json.loads(files[source.name][1].rstrip(b"\0"))["patcher"]
     controller = next(row["box"] for row in patch["boxes"] if row["box"].get("varname") == "ctrl")
