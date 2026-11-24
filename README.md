@@ -1,18 +1,32 @@
 # M4L Wrappers
 
-Standalone Max for Live audio effects for controlling installed plug-ins from Ableton Live’s Device View. The first two devices host the VST3 editions of Wavesfactory Spectre and Sonnox Oxford Inflator. Starting with v1.3, each device ships as a single `.amxd` for macOS (Apple Silicon or Intel) and Windows x64 (Intel or AMD). Install the corresponding licensed VST3 on each computer, then open the device in Live with Max for Live.
+Control Soundtoys Decapitator, Wavesfactory Spectre and Sonnox Oxford Inflator from Ableton Live’s Device View. Each wrapper adds linked Pre Gain and Post Gain controls, input and output meters, and one-click gain matching by short-term LUFS, RMS or sample peak.
+
+Each v1.4 download contains a single `.amxd`. Install the corresponding licensed VST3 plug-in and open the wrapper in Live with Max for Live. The devices support macOS (Apple Silicon and Intel), with beta support for Windows x64.
 
 ## Spectre Wrapper
 
-Download: https://maxforlive.com/library/device/17366/spectre-wrapper
+Drag five colour-coded bands to shape saturation by frequency. Each band has its own saturation type and channel selection.
 
-![Spectre Wrapper in Ableton Live with five saturation bands and band 4 selected](docs/images/spectre.png)
+[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-spectre-wrapper) · [View on maxforlive.com](https://maxforlive.com/library/device/17366/spectre-wrapper)
+
+![Spectre Wrapper v1.4 with five saturation curves and the controls for band 3](docs/images/spectre.png)
 
 ## Oxford Inflator Wrapper
 
-Download: https://maxforlive.com/library/device/17365/oxford-inflator-wrapper
+Adjust Input, Effect, Curve and Output, and switch Clip 0 dB, Band Split and Effect In directly from the device panel.
 
-![Oxford Inflator Wrapper in Ableton Live with Drive Link and Band Split enabled](docs/images/oxford-inflator.png)
+[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-oxfird-inflator-wrapper) · [View on maxforlive.com](https://maxforlive.com/library/device/17365/oxford-inflator-wrapper)
+
+![Oxford Inflator Wrapper v1.4 with its four faders between the input and output meters](docs/images/oxford-inflator.png)
+
+## Decapitator Wrapper
+
+Choose among five saturation styles, push Drive or engage Punish, then shape the sound with the filters and Tone control. Use Mix to blend the processed signal with the dry input.
+
+[Download on Gumroad](https://stephanterning.gumroad.com/l/m4l-decapitator-wrapper)
+
+![Decapitator Wrapper v1.4 with style E selected, Punish engaged and automatic output trim](docs/images/decapitator.png)
 
 ## Build on macOS
 
