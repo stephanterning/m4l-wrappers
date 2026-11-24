@@ -62,7 +62,7 @@ static void loadOnMain(Device* d,t_symbol*,long argc,t_atom* args){
             if(!fresh->open(path,error)){fresh->shutdown();continue;}
             if(encoded!="-" && (state.empty() || !fresh->recall(state))){
                 fresh->shutdown();
-                error="The plug-in could not restore the saved settings for this instance.";
+                error="The plug-in could not restore its state from this Live Set.";
                 continue;
             }
             bool ok=false;

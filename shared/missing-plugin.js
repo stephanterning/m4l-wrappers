@@ -9,6 +9,9 @@ const releaseRetryPanel = new Task(function () {
 
 function status(value) {
     phase = value;
+    const enabled = value === "ready" ? 1 : 0;
+    for (const name of pointerControls) patch.getnamed(name).message("active", enabled);
+    if (!enabled) setMatchAvailability([false,false,false]);
     if (value !== "loaderror") failureDetail = "";
     if (value === "ready") startupWarningPending = false;
     if (!holdingRetryPanel || value === "loading") showPanelStatus(value);

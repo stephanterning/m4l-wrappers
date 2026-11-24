@@ -1,6 +1,6 @@
 // The builder supplies the documented plug-in name, Max unique ID, VST3 class ID and parameter names.
 inlets = 3;
-outlets = 4; // vst~, wrapper events, Drive line~, output stage
+outlets = 4; // vst~, wrapper events, stereo Drive, output stage
 const patch = this.patcher;
 const nativeHost = () => patch.getnamed("maxPlugin");
 const temp = "Tempfolder:/m4l-host-" + Date.now() + "-" + Math.floor(Math.random() * 0x100000000).toString(16);
@@ -9,7 +9,9 @@ const presetPath = temp + "-import.vstpreset";
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 let phase = "idle", state = "-", names = [], mapping = [], inverse = [];
 let identity, attempts, reportedLatency = -1, loadingStarted = false;
-let recallNotification = false;
+const restoreError = "The plug-in could not restore its state from this Live Set.";
+let probeValue, probeReply, probePass;
+const recallTask = new Task(importAndCheck, this);
 const inspectTask = new Task(inspect, this);
 const finishTask = new Task(finish, this);
 const latencyTask = new Task(function () { if (phase === "ready") outlet(0, "get", -10); }, this);
@@ -104,7 +106,7 @@ function fail(detail) {
     outlet(1, "loaderror", detail);
 }
 function load(encoded) {
-    inspectTask.cancel(); finishTask.cancel(); latencyTask.cancel();
+    inspectTask.cancel(); finishTask.cancel(); recallTask.cancel(); latencyTask.cancel();
     outlet(3, "wet", 0); setLatency(0);
     phase = "discovering";
     state = String(encoded); attempts = 0;
@@ -135,22 +137,47 @@ function inspect() {
         }
         inverse[mapping[i]] = i;
     }
-    phase = "restoring"; recallNotification = false;
+    phase = "restoring";
     try {
         if (state !== "-") {
             const full = state.startsWith("preset1_");
             const bytes = full ? decode(state.slice(8)) : legacyPreset(decode(state));
             parsePreset(bytes);
             writeFile(presetPath, bytes);
-            outlet(0, "read", presetPath);
+            probePass = 0;
+            prepareReadback();
+            return;
         }
-    } catch (error) { fail("The plug-in could not restore the saved settings for this instance."); return; }
+    } catch (error) { fail(restoreError); return; }
     finishTask.schedule(120);
+}
+// vst~ does not return a success flag for read. While muted, change one continuous
+// parameter and verify the preset replaces it. A second marker handles a real
+// preset whose stored value happens to equal the first marker. The wrapper never
+// sends these private host edits to Live or stores them in the instance bank.
+function prepareReadback() {
+    probeValue = probePass === 0 ? 0.25 : 0.75;
+    outlet(0, [mapping[1], probeValue]);
+    recallTask.schedule(100);
+}
+function importAndCheck() {
+    if (phase !== "restoring") return;
+    probeReply = null;
+    outlet(0, "get", mapping[1]);
+    if (probeReply === null || Math.abs(probeReply-probeValue) > 0.01) { fail(restoreError); return; }
+    outlet(0, "read", presetPath);
+    finishTask.schedule(150);
 }
 function finish() {
     if (phase !== "restoring") return;
-    if (state !== "-" && !recallNotification) {
-        fail("Max did not confirm that the saved settings were applied."); return;
+    if (state !== "-") {
+        probeReply = null;
+        outlet(0, "get", mapping[1]);
+        if (probeReply === null) { fail(restoreError); return; }
+        if (Math.abs(probeReply-probeValue) < 0.01) {
+            if (probePass++ === 0) { prepareReadback(); return; }
+            fail(restoreError); return;
+        }
     }
     phase = "ready";
     outlet(1, "ready"); // The existing controller synchronizes the Live-automated parameters.
@@ -174,7 +201,7 @@ function parameterChanged(index, value) {
     if (index === -10) { if (phase === "ready") setLatency(value); return; }
     const slot = inverse[index];
     if (slot === undefined || !Number.isFinite(value) || value < 0 || value > 1) return;
-    if (phase === "restoring") { recallNotification = true; return; }
+    if (phase === "restoring") { if (slot === 1) probeReply = value; return; }
     if (phase !== "ready") return;
     outlet(1, "edited", slot, value);
     if (product.parameters[slot] === "Quality") latencyTask.schedule(30);
@@ -189,7 +216,7 @@ function param(slot, value) {
     if (product.parameters[slot] === "Quality") latencyTask.schedule(30);
 }
 function open() { if (phase === "ready") outlet(0, "open"); }
-function drive(db) { outlet(2, [Math.pow(10, db/20),5]); }
+function drive(db) { outlet(2, "output", db); }
 function output(db) { outlet(3, "output", db); }
 function metering(token) { outlet(3, "metering", token); }
-function notifydeleted() { inspectTask.cancel(); finishTask.cancel(); latencyTask.cancel(); }
+function notifydeleted() { inspectTask.cancel(); finishTask.cancel(); recallTask.cancel(); latencyTask.cancel(); }

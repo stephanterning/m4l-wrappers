@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT / "tests"))
 import build
 from package import directory
 
-CLASS = "m4lwrapperoutput~"
+CLASS = "m4lwrappergainstage~"
 PRODUCTS = {
     "spectre": ("Spectre", -142919238, "56535453705472737065637472650000"),
     "oxford-inflator": ("Oxford Inflator", 714868650, "5653544F494E546F78666F726420696E"),
@@ -39,16 +39,13 @@ def audio_graph(patch, device):
     def wire(a, i, b, j):
         lines.append({"patchline": {"source": [a,i], "destination": [b,j]}})
     box("maxPlugin", "newobj", 320, 1230, text="vst~ 2 2 @prefer VST3 @autosave 0", numinlets=2,numoutlets=8)
-    box("driveRamp", "newobj", 65, 1150, text="line~ 1.")
+    box("driveRamp", "newobj", 65, 1150, text=CLASS+" drive", numinlets=2,numoutlets=3)
     box("wrapperOutput", "newobj", 210, 1280, text=CLASS, numinlets=4,numoutlets=3)
     box("maxHostControl", "v8.codebox", 500, 1230, numinlets=3, numoutlets=4,
         code="const product = "+json.dumps(product)+";\n"+(HERE/"adapter.js").read_text())
     for ch in range(2):
-        gain = "driveMultiply"+str(ch)
-        box(gain, "newobj", 65+110*ch, 1190, text="*~ 1.")
-        wire(ids["in"],ch,gain,0)
-        wire("driveRamp",0,gain,1)
-        wire(gain,0,"maxPlugin",ch)
+        wire(ids["in"],ch,"driveRamp",ch)
+        wire("driveRamp",ch,"maxPlugin",ch)
         wire(ids["in"],ch,"wrapperOutput",ch)
         wire("maxPlugin",ch,"wrapperOutput",ch+2)
         wire("wrapperOutput",ch,ids["out"],ch)
@@ -83,6 +80,9 @@ def make(device, source, output, windows):
     config = json.loads((device/"device.json").read_text())
     files = directory(source.read_bytes())
     patch = json.loads(files[source.name][1].rstrip(b"\0"))["patcher"]
+    controller = next(row["box"] for row in patch["boxes"] if row["box"].get("varname") == "ctrl")
+    controller["code"] = "\n".join(p.read_text() for p in (device/"controller.js",
+        ROOT/"shared/missing-plugin.js", ROOT/"shared/meter-controls.js"))
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
@@ -93,6 +93,8 @@ def make(device, source, output, windows):
                 path = work/name
                 path.write_bytes(data)
                 assets[name] = path
+        if device.name == "spectre":
+            assets["spectre-bands-v1.js"] = device/"spectre-bands-v1.js"
         result = output/source.name
         build.freeze(bundle,audio_graph(patch,device),result,assets,
                      build.windows_external(windows,CLASS) if windows else None)
