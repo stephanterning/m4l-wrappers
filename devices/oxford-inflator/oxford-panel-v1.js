@@ -7,15 +7,21 @@ function value(i,v){if(vals[i]!==v){vals[i]=v;mgraphics.redraw();}}
 function status(s){if(state!==s){state=s;mgraphics.redraw();}}
 function col(g,c){g.set_source_rgba(c[0],c[1],c[2],c.length===4?c[3]:1);}
 function rect(g,x,y,w,h,c){col(g,c);g.rectangle(x,y,w,h);g.fill();}
+function gradientRect(g,x,y,w,h,start,end,horizontal){
+    var pattern=g.pattern_create_linear(x,y,horizontal?x+w:x,horizontal?y:y+h);
+    pattern.add_color_stop_rgba(0,start[0],start[1],start[2],1);
+    pattern.add_color_stop_rgba(1,end[0],end[1],end[2],1);
+    g.set_source(pattern);g.rectangle(x,y,w,h);g.fill();
+}
 function rr(g,x,y,w,h,r,c){col(g,c);g.rectangle_rounded(x,y,w,h,r,r);g.fill();}
 function txt(g,t,x,y,size,c,align,bold){
     g.select_font_face("Arial","normal",bold?"bold":"normal");g.set_font_size(size);
     var tw=g.text_measure(t)[0];col(g,c);g.move_to(x-(align===1?tw*.5:align===2?tw:0),y);g.show_text(t);
 }
 function art(g,x,y,w,h,X,Y,ww,hh){g.image_surface_draw(skin,x,y,w,h,X,Y,ww,hh);}
-var dark=[.075,.095,.14],ink=[.045,.055,.075],pale=[.94,.96,1],yellow=[.92,.88,.41];
+var dark=[.14,.17,.23],ink=[.045,.055,.075],pale=[.94,.96,1],yellow=[.85,.84,.57];
 function readout(g,s,cx){
-    rr(g,cx-23,45,46,15,2,[.10,.11,.16]);rr(g,cx-22,46,44,12,1,[.155,.18,.25]);
+    rr(g,cx-23,45,46,15,2,[.06,.08,.12]);rr(g,cx-22,46,44,12,1,[.19,.23,.31]);
     txt(g,s,cx,56.4,11,yellow,1,false);
 }
 function fader(g,i,cx){
@@ -26,7 +32,7 @@ function fader(g,i,cx){
     rr(g,cx-2,74,4,76,2,[.19,.24,.34]);rr(g,cx-1,76,2,71,1,[.44,.51,.65]);
     if(skin) art(g,49,405,57,111,cx-12,y-14,24,29);
     else {
-        rr(g,cx-11,y-10,22,20,3,[.76,.80,.88]);
+        rr(g,cx-11,y-10,22,20,3,[.72,.77,.87]);
         rect(g,cx-8,y-1,16,2,ink);
     }
 }
@@ -47,12 +53,14 @@ function paintFace(g){
     art(g,8,58,11,619,2,27,60,140);art(g,279,58,10,619,64,27,189,140);
     art(g,864,58,12,619,255,27,61,140);
     }else{
-        rect(g,2,2,314,23,[.23,.31,.46]);
+        gradientRect(g,2,2,314,23,[.54,.64,.80],[.47,.56,.75],true);
         txt(g,"Oxford Inflator",159,18,14,pale,1,true);
-        rect(g,2,27,60,140,[.28,.37,.52]);
-        rect(g,64,27,189,140,[.68,.73,.82]);
-        rect(g,255,27,61,140,[.28,.37,.52]);
+        gradientRect(g,2,27,60,140,[.55,.65,.80],[.50,.60,.77],false);
+        gradientRect(g,64,27,189,140,[.72,.77,.88],[.67,.73,.86],false);
+        gradientRect(g,255,27,61,140,[.47,.56,.75],[.40,.48,.70],false);
     }
+    rr(g,247,5,64,17,2,[.29,.37,.54]);
+    txt(g,"Open plug-in",279,17,9,pale,1,true);
     var xs=[32,94,222,286],titles=["INPUT","EFFECT","CURVE","OUTPUT"];
     for(var i=0;i<4;i++){
         txt(g,titles[i],xs[i],41,11,i===0||i===3?pale:ink,1,true);
@@ -60,10 +68,10 @@ function paintFace(g){
         readout(g,display,xs[i]);fader(g,i,xs[i]);
     }
 
-    txt(g,"v1.3",158,41,9,[.28,.35,.48],1,false);
-    button(g,158,68,"CLIP 0 dB",vals[6],[.96,.38,.43]);
-    button(g,158,100,"BAND SPLIT",vals[5],[.98,.82,.27]);
-    button(g,158,132,"EFFECT IN",vals[4],[.24,.92,.58]);
+    txt(g,"v1.3",158,41,9,[.34,.41,.54],1,false);
+    button(g,158,68,"CLIP 0 dB",vals[6],[.82,.37,.43]);
+    button(g,158,100,"BAND SPLIT",vals[5],[.85,.85,.54]);
+    button(g,158,132,"EFFECT IN",vals[4],[.29,.80,.53]);
 
 }
 function paint(){var g=mgraphics;g.save();var size=g.size;g.scale(size[0]/W,size[1]/H);paintFace(g);g.restore();}

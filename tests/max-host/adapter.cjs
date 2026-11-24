@@ -21,13 +21,20 @@ class File {
 }
 const product = {id: 17, cid:"0123456789ABCDEF0123456789ABCDEF", name:"Fixture", parameters:["Gain","Quality"]};
 let storedValue = 0.7, readParameter = 0;
+let windowVisible = false;
 let installed = true, wrong = false, missingParameter = false, corruptRead = false;
 const globals = {Task, File, product, post(){}, patcher:{getnamed(){return {getattr(){return installed ? ["C74_VST3:/Fixture",17]:null;}};}},
     outlet(out, op, ...args) {
         events.push([out,op,...args]);
         if (out !== 0) return;
         if (Array.isArray(op)) readParameter = op[1];
-        if (op === "get") context.parameterChanged(args[0], args[0] === -8 ? (wrong ? 99 : 17) : args[0] === -10 ? 60 : readParameter);
+        if (op === "open") windowVisible = true;
+        if (op === "wclose") windowVisible = false;
+        if (op === "get" && args[0] === -9) {
+            context.inlet = 2;
+            context.list(-9, ...(windowVisible ? [-200,100,550,600] : [0,0,500,200]));
+            context.inlet = 0;
+        } else if (op === "get") context.parameterChanged(args[0], args[0] === -8 ? (wrong ? 99 : 17) : args[0] === -10 ? 60 : readParameter);
         if (op === "params") {
             context.inlet = 1;
             for (const name of missingParameter ? ["Gain"] : ["Quality","Gain"]) { context.messagename=name;context.anything(); }
@@ -41,8 +48,8 @@ const globals = {Task, File, product, post(){}, patcher:{getnamed(){return {geta
         }
     }};
 const source = fs.readFileSync(path.join(__dirname, "../../experimental/max-host/adapter.js"), "utf8");
-function instantiate() {
-    const instance = vm.createContext({...globals});
+function instantiate(overrides = {}) {
+    const instance = vm.createContext({...globals,...overrides});
     vm.runInContext(source, instance);
     return instance;
 }
@@ -68,6 +75,14 @@ for(const failure of ["absent","wrong","missing parameter","corrupt preset","unc
     assert.ok(was(3,"wet",0) && events.some(e=>e[1]==="loaderror") && !events.some(e=>["ready","plugstate"].includes(e[1])),failure);
 }
 reset();installed=true;wrong=false;missingParameter=false;corruptRead=false;context.load("AQID");drain();assert.ok(was(1,"ready"));
+reset();context.openPlugin();assert.ok(was(0, "open") && was(1, "editorWindow", 1));
+windowVisible = false;
+drain();
+assert.ok(was(1, "editorWindow", 0) && !was(0, "wclose"));
+reset();context.openPlugin();context.closePlugin();drain();
+assert.ok(was(0, "wclose") && was(1, "editorWindow", 0));
+context.load("AQID");reset();context.openPlugin();assert.deepEqual(events, []);
+drain();
 
 
 // A saved Live Set contains the last good token even if the device stays missing
@@ -88,4 +103,85 @@ reset();
 context.load(JSON.parse(savedFile).bank);
 drain();
 assert.ok(was(1,"ready") && was(3,"wet",1));
+
+const decapitator = {
+    ...product,
+    name: "Decapitator",
+    parameters: ["Style","Drive","Punish","LowCut","Tone","HighCut","Mix","AutoGain","LowThump","HighSlope","OutputTrim"],
+    restoreFromPlugin: true,
+    restoreProbe: 6,
+    autoGain: {drive: 1, punish: 2, enabled: 7, trim: 10}
+};
+const pluginNames = ["Bypass", ...decapitator.parameters];
+const saved = [0, 0.25, 0.5, 0, 0, 0, 1, 0.9, 1, 0, 0, 0.67];
+const working = [...saved];
+const ordinal = slot => pluginNames.indexOf(decapitator.parameters[slot]) + 1;
+const drive = ordinal(decapitator.autoGain.drive);
+const punish = ordinal(decapitator.autoGain.punish);
+const enabled = ordinal(decapitator.autoGain.enabled);
+const trim = ordinal(decapitator.autoGain.trim);
+context = instantiate({
+    product: decapitator,
+    outlet(out, op, ...args) {
+        events.push([out, op, ...args]);
+        if (out !== 0) return;
+        if (Array.isArray(op)) {
+            const [index, value] = op;
+            working[index - 1] = value;
+            context.parameterChanged(index, value); // vst~ echoes the parameter as it is written.
+        }
+        if (op === "get") context.parameterChanged(args[0], args[0] === -10 ? 62 : working[args[0] - 1]);
+        if (op === "params") {
+            context.inlet = 1;
+            for (const name of pluginNames) {
+                context.messagename = name;
+                context.anything();
+            }
+            context.inlet = 0;
+        }
+        if (op === "read") working.splice(0, working.length, ...saved);
+        if (op === "write") files.set(args[0], Array.from(context.legacyPreset([50, 60, 70])));
+    }
+});
+reset();
+const preset = "preset1_" + context.encode(context.legacyPreset([50, 60, 70]));
+context.load(preset);
+drain();
+assert.ok(was(1, "ready") && was(1, "latency", 62) && was(1, "autoTrim", 0));
+assert.ok(was(1, "edited", decapitator.autoGain.trim, 0.67), "Display the imported OutputTrim");
+assert.deepEqual(events.filter(([out, op]) => out === 0 && Array.isArray(op)).map(e => Array.from(e[1])),
+                 [[ordinal(decapitator.restoreProbe), 0.25]], "Only the muted, unrelated recall probe may write during load");
+reset();
+context.param(decapitator.autoGain.drive, 0.7);
+assert.ok(was(0, [drive, 0.7]) && was(1, "autoTrim", 1));
+assert.ok(!was(0, "get", trim) && !was(1, "autoTrim", 0), "Drive's echo is not an updated trim");
+context.snapshot();
+assert.ok(was(1, "plugstate", preset), "Decapitator saves the complete preset");
+assert.ok(!was(1, "autoTrim", 0), "Exporting the preset does not verify the live display");
+reset();
+context.param(decapitator.autoGain.enabled, 0);
+assert.ok(was(0, [enabled, 0]) && was(1, "autoTrim", 2) && !was(1, "autoTrim", 0));
+reset();
+context.param(decapitator.autoGain.enabled, 1);
+assert.ok(was(0, [enabled, 1]) && was(1, "autoTrim", 1));
+reset();
+context.param(decapitator.autoGain.trim, 0.75);
+assert.ok(was(0, [trim, 0.75]) && was(1, "autoTrim", 0));
+reset();
+context.param(decapitator.autoGain.drive, 0.7);
+assert.deepEqual(events, [], "An identical Drive echo must preserve manual trim");
+context.param(decapitator.autoGain.drive, 0.4);
+assert.ok(was(1, "autoTrim", 1));
+reset();
+context.parameterChanged(trim, 0.3);
+context.parameterChanged(drive, 0.6);
+assert.ok(was(1, "autoTrim", 0) && !was(1, "autoTrim", 1), "Editor event order preserves an actual trim update");
+reset();
+context.param(decapitator.autoGain.punish, 1);
+assert.ok(was(0, [punish, 1]) && was(1, "autoTrim", 1));
+context.parameterChanged(trim, 0.3);
+context.param(decapitator.autoGain.enabled, 0);
+reset();
+context.param(decapitator.autoGain.enabled, 1);
+assert.ok(was(0, [enabled, 1]) && was(1, "autoTrim", 1), "Turning AutoGain on can change a known trim");
 console.log("Max host adapter and saved-state checks passed");

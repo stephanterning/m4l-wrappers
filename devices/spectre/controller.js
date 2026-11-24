@@ -80,9 +80,10 @@ function load() {
 function ready() {
     loadTimeout.cancel(); clear(); status("ready"); syncPlugin(); snapshotSoon();
 }
+var pluginEditorMessage = "open";
 function action() {
     if (isLoadFailure(phase)) retry();
-    else if (phase === "ready") outlet(0, "open");
+    else if (phase === "ready") outlet(0, pluginEditorMessage);
 }
 function cleanup() {
     cancelRetry();

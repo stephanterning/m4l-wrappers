@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
+import sys
 import time
 import zipfile
 
@@ -98,6 +99,20 @@ def freeze(bundle, patch, path, assets, windows_binary=None):
     tmp.replace(path)
 
 
+def add_warning_overlay(patch, assets, controller):
+    panel = next(row["box"] for row in patch["boxes"] if row["box"]["varname"] == "face")
+    panel_x, _, panel_width, height = panel["presentation_rect"]
+    width = patch["devicewidth"]
+    overlay = dict(id="warning-overlay", varname="warningOverlay", maxclass="v8ui",
+                   filename="wrapper-warning-overlay.js", numinlets=1, numoutlets=1, outlettype=[""],
+                   jsarguments=[panel_x / width, panel_width / width], presentation=1,
+                   presentation_rect=[0, 0, width, height],
+                   patching_rect=[10, 1100, width, height])
+    patch["boxes"].insert(0, {"box": overlay})
+    patch["lines"].append({"patchline": {"source": [overlay["id"], 0], "destination": [controller["id"], 0]}})
+    assets[overlay["filename"]] = "shared/warning-overlay.js"
+
+
 def build_device(device, windows_binary=None):
     config = json.loads((device / "device.json").read_text())
     name = config["external"]
@@ -118,17 +133,7 @@ def build_device(device, windows_binary=None):
     output = ROOT / "dist" / (config["name"] + ".amxd")
     output.parent.mkdir(exist_ok=True)
     assets = config["resources"].copy()
-    panel = next(row["box"] for row in patch["boxes"] if row["box"]["varname"] == "face")
-    panel_x, _, panel_width, height = panel["presentation_rect"]
-    width = patch["devicewidth"]
-    overlay = dict(id="warning-overlay", varname="warningOverlay", maxclass="v8ui",
-                   filename="wrapper-warning-overlay.js", numinlets=1, numoutlets=1, outlettype=[""],
-                   jsarguments=[panel_x / width, panel_width / width], presentation=1,
-                   presentation_rect=[0, 0, width, height],
-                   patching_rect=[10, 1100, width, height])
-    patch["boxes"].insert(0, {"box": overlay})
-    patch["lines"].append({"patchline": {"source": [overlay["id"], 0], "destination": [controller["id"], 0]}})
-    assets[overlay["filename"]] = "shared/warning-overlay.js"
+    add_warning_overlay(patch, assets, controller)
     if device.name == "oxford-inflator":
         skin = ROOT / assets["oxford-surface.png"]
         if skin.is_file():
@@ -145,15 +150,20 @@ def build_device(device, windows_binary=None):
 if __name__ == "__main__":
     devices = ROOT / "devices"
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("devices", nargs="*", help="Device directories to build (defaults to all)")
+    parser.add_argument("devices", nargs="*", help="Device directories to build (defaults to the native-host releases)")
     parser.add_argument("--windows-externals", type=Path, metavar="DIR",
                         help="Also embed each Windows x64 .mxe64 from DIR")
     args = parser.parse_args()
-    selected = [devices / name for name in args.devices] or sorted(devices.iterdir())
-    binaries = {}
-    if args.windows_externals is not None:
-        for device in selected:
-            config = json.loads((device / "device.json").read_text())
-            binaries[device] = windows_external(args.windows_externals, config["external"])
+    selected = [devices / name for name in args.devices] or sorted(
+        device for device in devices.iterdir() if (device / "Engine.mm").is_file()
+    )
     for device in selected:
-        build_device(device, binaries.get(device))
+        config = json.loads((device / "device.json").read_text())
+        if config.get("host") == "max":
+            cmd = [sys.executable, str(ROOT / "experimental/max-host/build_candidate.py"), device.name, str(ROOT / "dist")]
+            if args.windows_externals:
+                cmd.extend(["--windows-externals", str(args.windows_externals)])
+            subprocess.run(cmd, check=True)
+        else:
+            binary = windows_external(args.windows_externals, config["external"]) if args.windows_externals else None
+            build_device(device, binary)

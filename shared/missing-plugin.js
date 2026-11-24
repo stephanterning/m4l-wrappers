@@ -1,5 +1,6 @@
 let startupWarningPending = true;
 let holdingRetryPanel = false;
+let editorShowing = false;
 let failureDetail = "";
 const retrySearch = new Task(load, this);
 const releaseRetryPanel = new Task(function () {
@@ -9,8 +10,9 @@ const releaseRetryPanel = new Task(function () {
 
 function status(value) {
     phase = value;
+    if (value !== "ready") editorShowing = false;
     const enabled = value === "ready" ? 1 : 0;
-    for (const name of pointerControls) patch.getnamed(name).message("active", enabled);
+    for (const name of pointerControls) patch.getnamed(name).message("active", enabled && !editorShowing ? 1 : 0);
     if (!enabled) setMatchAvailability([false,false,false]);
     if (value !== "loaderror") failureDetail = "";
     if (value === "ready") startupWarningPending = false;
@@ -26,13 +28,26 @@ function loadSavedPlugin() {
 function isLoadFailure(value) { return value === "missing" || value === "loaderror"; }
 
 function showPanelStatus(value) {
+    if (value === "ready" && editorShowing) value = "editor";
     panel().message("status", value);
     const overlay = patch.getnamed("warningOverlay");
-    const visible = isLoadFailure(value) || value === "loading";
+    const visible = isLoadFailure(value) || value === "loading" || value === "editor";
     overlay.hidden = !visible;
     overlay.ignoreclick = !visible;
     if (visible) patch.bringtofront(overlay);
     overlay.message("status", value, failureDetail);
+}
+function editorWindow(value) {
+    const open = phase === "ready" && Number(value) === 1;
+    if (editorShowing === open) return;
+    editorShowing = open;
+    for (const name of pointerControls) patch.getnamed(name).message("active", open ? 0 : 1);
+    for (let i = 0; i < canMatch.length; i++)
+        patch.getnamed("match" + i).message("active", !open && canMatch[i] ? 1 : 0);
+    if (!holdingRetryPanel) showPanelStatus(phase);
+}
+function closeEditor() {
+    if (editorShowing) outlet(0, "closePlugin");
 }
 function retry() {
     if (holdingRetryPanel || !isLoadFailure(phase)) return;

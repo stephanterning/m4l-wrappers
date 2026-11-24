@@ -67,7 +67,7 @@ function applyOutputTrim(db){
 function setMatchAvailability(ready){
     if(ready.every((value,i)=>value===canMatch[i]))return;
     for(let i=0;i<3;i++){
-        if(canMatch[i]!==ready[i])patch.getnamed("match"+i).message("active",ready[i]?1:0);
+        if(canMatch[i]!==ready[i])patch.getnamed("match"+i).message("active",ready[i]&&!editorShowing?1:0);
     }
     canMatch=ready;
     patch.getnamed("outputMeter").message("available",...ready.map(Number));

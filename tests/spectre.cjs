@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const base = path.join(__dirname,'../dist/Spectre Wrapper.amxd');
+const base = process.argv[2] || path.join(__dirname,'../dist/Spectre Wrapper.amxd');
 const b = fs.readFileSync(base), archive = b.subarray(32);
 assert.equal(b.readUInt32LE(28),archive.length);
 const entries = new Map();
@@ -28,8 +28,13 @@ const boxes=Object.fromEntries(patch.boxes.map(({box:b})=>[b.varname,b]));
 const ids=new Set(Object.values(boxes).map(b=>b.id));
 for(const {patchline:l} of patch.lines) assert(ids.has(l.source[0]) && ids.has(l.destination[0]));
 const assets=[...entries.keys()];
-assert(assets.includes('spectrewrapper2~/zipfile'));
-assert.deepEqual(entries.get('spectrewrapper2~/executable'),fs.readFileSync(path.join(__dirname,'../build/spectre/spectrewrapper2~.mxo/Contents/MacOS/spectrewrapper2~')));
+if (boxes.maxPlugin) {
+    assert(assets.includes('m4lwrappergainstage~/zipfile'));
+    assert(boxes.maxPlugin.text.startsWith('vst~ 2 2 @prefer VST3'));
+} else {
+    assert(assets.includes('spectrewrapper2~/zipfile'));
+    assert.deepEqual(entries.get('spectrewrapper2~/executable'),fs.readFileSync(path.join(__dirname,'../build/spectre/spectrewrapper2~.mxo/Contents/MacOS/spectrewrapper2~')));
+}
 for(const box of Object.values(boxes)) {
     if(['jsui','v8ui'].includes(box.maxclass)) assert(assets.includes(box.filename));
     if(box.jspainterfile) assert(assets.includes(box.jspainterfile));
@@ -164,4 +169,21 @@ for(const [outcome,duration] of [['missing',50],['missing',1400],['loaderror',50
 }
 assert.equal(overlay.hidden,true);assert.equal(overlay.ignoreclick,true);
 assert(ui.some(e=>e[0]==='face' && e[1]==='status' && e[2]==='ready'));
+if (boxes.maxPlugin) {
+    ctx.editorWindow(1);
+    assert.equal(lastStatus(), 'editor');
+    assert.equal(overlay.hidden, false);
+    assert.equal(overlay.ignoreclick, false);
+    const click = vm.createContext({mgraphics:{init(){},redraw(){}}, Task,
+        jsarguments:[null,...boxes.warningOverlay.jsarguments],
+        outlet:(_, message)=>ctx[message]()});
+    vm.runInContext(entries.get(boxes.warningOverlay.filename).toString(), click);
+    click.status('editor');
+    click.onclick(1,1,1); // The input meter is also a close target.
+    assert.deepEqual(commands.at(-1), ['closePlugin']);
+    ctx.editorWindow(0);
+    assert.equal(lastStatus(), 'ready');
+    assert.equal(overlay.hidden, true);
+    assert.equal(overlay.ignoreclick, true);
+}
 console.log('Track-named English missing warning, Retry reload, and restored state routing passed.');

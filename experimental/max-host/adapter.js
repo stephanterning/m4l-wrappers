@@ -7,14 +7,20 @@ const temp = "Tempfolder:/m4l-host-" + Date.now() + "-" + Math.floor(Math.random
 const exportPath = temp + "-export.vstpreset";
 const presetPath = temp + "-import.vstpreset";
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const restoreProbe = product.restoreProbe ?? 1;
+const gainParameters = product.autoGain;
+const knownTrim = 0, automaticTrim = 1, unknownTrim = 2;
 let phase = "idle", state = "-", names = [], mapping = [], inverse = [];
 let attempts, reportedLatency = -1;
 const restoreError = "The plug-in could not restore its state from this Live Set.";
 let probeValue, probeReply, probePass;
+let autoGainEnabled = false, lastDrive, trimDisplay;
 const recallTask = new Task(importAndCheck, this);
 const inspectTask = new Task(inspect, this);
 const finishTask = new Task(finish, this);
 const latencyTask = new Task(function () { if (phase === "ready") outlet(0, "get", -10); }, this);
+const editorTask = new Task(checkEditorWindow, this);
+let editorRequested = false, closedRect = null, reportedRect = null, openingChecks = 0;
 
 function encode(bytes) {
     let result = "";
@@ -106,10 +112,16 @@ function fail(detail) {
     outlet(1, "loaderror", detail);
 }
 function load(encoded) {
+    endEditorSession();
     inspectTask.cancel(); finishTask.cancel(); recallTask.cancel(); latencyTask.cancel();
     outlet(3, "wet", 0); setLatency(0);
     phase = "discovering";
     state = String(encoded); attempts = 0;
+    if (gainParameters) {
+        autoGainEnabled = false;
+        lastDrive = undefined;
+        trimDisplay = undefined;
+    }
     outlet(0, "unplug");
     // A fresh name lookup is silent. Max may show a global confirmation dialog for scan.
     outlet(0, "plug_vst3", product.name);
@@ -162,13 +174,13 @@ function inspect() {
 // sends these private host edits to Live or stores them in the instance bank.
 function prepareReadback() {
     probeValue = probePass === 0 ? 0.25 : 0.75;
-    outlet(0, [mapping[1], probeValue]);
+    outlet(0, [mapping[restoreProbe], probeValue]);
     recallTask.schedule(100);
 }
 function importAndCheck() {
     if (phase !== "restoring") return;
     probeReply = null;
-    outlet(0, "get", mapping[1]);
+    outlet(0, "get", mapping[restoreProbe]);
     if (probeReply === null || Math.abs(probeReply-probeValue) > 0.01) { fail(restoreError); return; }
     outlet(0, "read", presetPath);
     finishTask.schedule(150);
@@ -177,7 +189,7 @@ function finish() {
     if (phase !== "restoring") return;
     if (state !== "-") {
         probeReply = null;
-        outlet(0, "get", mapping[1]);
+        outlet(0, "get", mapping[restoreProbe]);
         if (probeReply === null) { fail(restoreError); return; }
         if (Math.abs(probeReply-probeValue) < 0.01) {
             if (probePass++ === 0) { prepareReadback(); return; }
@@ -185,7 +197,13 @@ function finish() {
         }
     }
     phase = "ready";
-    outlet(1, "ready"); // The existing controller synchronizes the Live-automated parameters.
+    outlet(1, "ready");
+    // The restored preset is authoritative for Decapitator. Read its values for
+    // the panel and Live parameter displays without replaying the old controls.
+    if (product.restoreFromPlugin) {
+        if (gainParameters) showTrim(knownTrim);
+        for (const index of mapping) outlet(0, "get", index);
+    }
     outlet(0, "get", -10);
     outlet(3, "wet", 1);
 }
@@ -198,29 +216,106 @@ function snapshot() {
         const bytes = readFile(exportPath), chunks = parsePreset(bytes);
         // The two current VST3s export only component state. In that case the stored
         // symbol stays readable by v1.3, without a format conversion on Live Set save.
-        outlet(1, "plugstate", chunks.otherState ? "preset1_" + encode(bytes) : encode(chunks.component));
+        const completePreset = product.restoreFromPlugin || chunks.otherState;
+        outlet(1, "plugstate", completePreset ? "preset1_" + encode(bytes) : encode(chunks.component));
     } catch (error) { post("Could not capture the plug-in state: " + error.message + "\n"); }
+}
+function showTrim(mode) {
+    if (trimDisplay === mode) return;
+    trimDisplay = mode;
+    outlet(1, "autoTrim", mode);
+}
+function observeAutoGain(slot, value) {
+    if (!gainParameters) return;
+    if (slot === gainParameters.drive) {
+        lastDrive = value;
+    } else if (slot === gainParameters.enabled) {
+        autoGainEnabled = value >= 0.5;
+        // Turning AutoGain off does not verify an unreported trim value.
+        if (trimDisplay === automaticTrim || trimDisplay === unknownTrim)
+            showTrim(autoGainEnabled ? automaticTrim : unknownTrim);
+    } else if (slot === gainParameters.trim) {
+        showTrim(knownTrim);
+    }
 }
 function parameterChanged(index, value) {
     if (index === -10) { if (phase === "ready") setLatency(value); return; }
     const slot = inverse[index];
     if (slot === undefined || !Number.isFinite(value) || value < 0 || value > 1) return;
-    if (phase === "restoring") { if (slot === 1) probeReply = value; return; }
+    if (phase === "restoring") { if (slot === restoreProbe) probeReply = value; return; }
     if (phase !== "ready") return;
+    observeAutoGain(slot, value);
     outlet(1, "edited", slot, value);
     if (product.parameters[slot] === "Quality") latencyTask.schedule(30);
 }
 function anything() {
     if (inlet === 1 && phase === "parameters") names.push(messagename);
 }
-function list(index, value) { if (inlet === 2) parameterChanged(index, value); }
+function list(index, value, top, right, bottom) {
+    if (inlet !== 2) return;
+    if (index === -9) {
+        if ([value, top, right, bottom].every(Number.isFinite))
+            reportedRect = [value, top, right, bottom].join(",");
+    } else parameterChanged(index, value);
+}
 function param(slot, value) {
     if (phase !== "ready" || !mapping[slot]) return;
+    if (gainParameters) {
+        const driveEdit = slot === gainParameters.drive;
+        const enablesAutoGain = slot === gainParameters.enabled && !autoGainEnabled && value >= 0.5;
+        const linkedEdit = autoGainEnabled && (driveEdit || slot === gainParameters.punish);
+        // A repeated Drive write could reapply the plug-in's compensation over a manual trim.
+        if (linkedEdit && driveEdit && value === lastDrive) return;
+        // These writes can change the audible trim without vst~ reporting its new value.
+        if (enablesAutoGain || linkedEdit) showTrim(automaticTrim);
+        observeAutoGain(slot, value);
+    }
     outlet(0, [mapping[slot], value]);
     if (product.parameters[slot] === "Quality") latencyTask.schedule(30);
 }
-function open() { if (phase === "ready") outlet(0, "open"); }
+// v8.codebox handles "open" itself. Translate only at the vst~ outlet.
+function editorRect() {
+    reportedRect = null;
+    outlet(0, "get", -9);
+    return reportedRect;
+}
+function endEditorSession() {
+    editorTask.cancel();
+    if (!editorRequested) return;
+    editorRequested = false;
+    outlet(1, "editorWindow", 0);
+}
+function checkEditorWindow() {
+    if (!editorRequested) return;
+    const rect = editorRect();
+    // These editors revert to the pre-open rectangle on close. Sample it per
+    // instance so window placement, scale and monitor choice need no constants.
+    if (rect !== null && rect !== closedRect) openingChecks = 0;
+    else if (openingChecks === 0 || --openingChecks === 0) {
+        endEditorSession();
+        return;
+    }
+    editorTask.schedule(250);
+}
+function openPlugin() {
+    if (phase !== "ready" || editorRequested) return;
+    closedRect = editorRect();
+    outlet(0, "open");
+    editorRequested = true;
+    openingChecks = 4;
+    outlet(1, "editorWindow", 1);
+    if (closedRect !== null) checkEditorWindow();
+}
+function closePlugin() {
+    if (!editorRequested) return;
+    outlet(0, "wclose");
+    endEditorSession();
+}
 function drive(db) { outlet(2, "output", db); }
 function output(db) { outlet(3, "output", db); }
-function metering(token) { outlet(3, "metering", token); }
-function notifydeleted() { inspectTask.cancel(); finishTask.cancel(); recallTask.cancel(); latencyTask.cancel(); }
+function metering(token) {
+    outlet(3, "metering", token);
+    if (product.restoreFromPlugin && token % 2 === 1) refreshLatency();
+}
+function refreshLatency() { if (phase === "ready") latencyTask.schedule(50); }
+function notifydeleted() { editorTask.cancel(); inspectTask.cancel(); finishTask.cancel(); recallTask.cancel(); latencyTask.cancel(); }

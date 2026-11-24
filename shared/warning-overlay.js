@@ -1,4 +1,4 @@
-// Foreground panel shared by every wrapper. Its only clickable control is Retry.
+// Foreground panel shared by every wrapper.
 inlets = 1;
 outlets = 1;
 mgraphics.init();
@@ -58,6 +58,15 @@ function text(value, x, baseline, size, bold, centered) {
 }
 
 function paint() {
+    if (phase === "editor") {
+        const g = mgraphics, [w, h] = g.size;
+        g.set_source_rgba(0.19, 0.20, 0.21, 0.77);
+        g.rectangle(0, 0, w, h);
+        g.fill();
+        g.set_source_rgba(1, 1, 1, 1);
+        text("Click to close plug-in window", w * (panelStart + panelWidth / 2), h / 2 + 4, 12, true, true);
+        return;
+    }
     if (phase !== "missing" && phase !== "loaderror" && phase !== "loading") return;
     const g = mgraphics, [w, h] = g.size;
     const [cardWidth, cardHeight] = cardSize(), buttonX = cardWidth - buttonWidth - 9;
@@ -95,6 +104,10 @@ function paint() {
 }
 
 function onclick(x, y, button, cmd, shift, caps, alt, ctrl, pointer) {
+    if (phase === "editor" && !(pointer && pointer.contextModifier)) {
+        outlet(0, "closeEditor");
+        return;
+    }
     if ((phase !== "missing" && phase !== "loaderror") || (pointer && pointer.contextModifier)) return;
     const [w, h] = mgraphics.size;
     const [cardWidth, cardHeight] = cardSize(), buttonX = cardWidth - buttonWidth - 9;

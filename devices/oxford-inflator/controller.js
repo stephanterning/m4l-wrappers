@@ -41,6 +41,7 @@ function load(){
     clear();status("loading");loadTimeout.schedule(15000);
     loadSavedPlugin();
 }
-function action(){if(isLoadFailure(phase))retry();else if(phase==="ready")outlet(0,"open");}
+var pluginEditorMessage = "open";
+function action(){if(isLoadFailure(phase))retry();else if(phase==="ready")outlet(0,pluginEditorMessage);}
 function cleanup(){cancelRetry();if(transportObserver){transportObserver.property="";transportObserver=null;}snapshotTask.cancel();loadTimeout.cancel();clear();}
 
