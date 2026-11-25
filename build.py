@@ -10,7 +10,7 @@ import time
 from host.portable_audio import install_audio
 
 ROOT = Path(__file__).resolve().parent
-WRAPPER_VERSION = "1.4"
+WRAPPER_VERSION = "1.5"
 AMXD_HEADER = bytes.fromhex("616d706604000000616161616d657461040000000700000070746368")
 
 
