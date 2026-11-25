@@ -3034,9 +3034,9 @@
             195,
             22
           ],
-          "text": "m4lwrappergainstage~ drive",
-          "numinlets": 2,
-          "numoutlets": 3
+          "text": "p preGain",
+          "numinlets": 3,
+          "numoutlets": 2
         }
       },
       {
@@ -3050,8 +3050,8 @@
             195,
             22
           ],
-          "text": "m4lwrappergainstage~",
-          "numinlets": 4,
+          "text": "p postGainAndMeter",
+          "numinlets": 5,
           "numoutlets": 3
         }
       },
@@ -4474,7 +4474,7 @@
           ],
           "destination": [
             "driveRamp",
-            0
+            2
           ]
         }
       },
@@ -4486,7 +4486,7 @@
           ],
           "destination": [
             "wrapperOutput",
-            0
+            4
           ]
         }
       },

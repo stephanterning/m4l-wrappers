@@ -28,13 +28,8 @@ const boxes=Object.fromEntries(patch.boxes.map(({box:b})=>[b.varname,b]));
 const ids=new Set(Object.values(boxes).map(b=>b.id));
 for(const {patchline:l} of patch.lines) assert(ids.has(l.source[0]) && ids.has(l.destination[0]));
 const assets=[...entries.keys()];
-if (boxes.maxPlugin) {
-    assert(assets.includes('m4lwrappergainstage~/zipfile'));
-    assert(boxes.maxPlugin.text.startsWith('vst~ 2 2 @prefer VST3'));
-} else {
-    assert(assets.includes('spectrewrapper2~/zipfile'));
-    assert.deepEqual(entries.get('spectrewrapper2~/executable'),fs.readFileSync(path.join(__dirname,'../build/spectre/spectrewrapper2~.mxo/Contents/MacOS/spectrewrapper2~')));
-}
+assert(boxes.maxPlugin.text.startsWith('vst~ 2 2 @prefer VST3'));
+assert(boxes.driveRamp.patcher && boxes.wrapperOutput.patcher);
 for(const box of Object.values(boxes)) {
     if(['jsui','v8ui'].includes(box.maxclass)) assert(assets.includes(box.filename));
     if(box.jspainterfile) assert(assets.includes(box.jspainterfile));
@@ -100,7 +95,7 @@ ctx.levels(1,1,1,-13,-8,-1,-12.95,-8.1,-.75);
 assert.deepEqual(ui.at(-1),['outputMeter','available',0,0,1]);
 ctx.gainmatch(2);assert.equal(values.postOutput,-18.25);assert.deepEqual(commands.at(-1),['metering',5]);
 ctx.latency(64);assert.equal(latency,64);
-console.log('Frozen archive, native binary, outer panel, all 39 parameter round trips, menu, relative Link, Gain Match threshold/reset and latency notification passed.');
+console.log('Frozen archive, portable DSP, outer panel, all 39 parameter round trips, menu, relative Link, Gain Match threshold/reset and latency notification passed.');
 // Exercise the same warning queue used by multiple devices in one Live Set.
 class Dictionary {
     constructor(){this.values=new Map();}

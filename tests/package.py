@@ -1,11 +1,9 @@
-"""Verify frozen Max-host devices against their built Windows and macOS externals."""
+"""Verify frozen Max-host devices and their portable embedded DSP."""
 import argparse
 import hashlib
-import io
 import json
 from pathlib import Path
 import struct
-import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -48,7 +46,24 @@ def compatibility_signature(patch):
     return hashlib.sha256(data).hexdigest()
 
 
-def verify(candidate, windows, expected):
+def check_embedded_graph(patch):
+    boxes = {row["box"]["id"]: row["box"] for row in patch["boxes"]}
+    assert len(boxes) == len(patch["boxes"])
+    for row in patch["lines"]:
+        edge = row["patchline"]
+        for side, ports in (("source", "numoutlets"), ("destination", "numinlets")):
+            name, port = edge[side]
+            box = boxes[name]
+            assert port >= 0 and (ports not in box or port < box[ports]), (side, name, port)
+    for box in boxes.values():
+        if box.get("text") == "gen~":
+            assert box["patcher"]["classnamespace"] == "dsp.gen"
+            assert any(child["box"].get("code") for child in box["patcher"]["boxes"])
+        if "patcher" in box:
+            check_embedded_graph(box["patcher"])
+
+
+def verify(candidate, expected):
     files = directory(candidate.read_bytes())
     after = json.loads(files[candidate.name][1].rstrip(b"\0"))["patcher"]
     assert compatibility_signature(after) == expected, "v1.4 parameter contract changed"
@@ -58,32 +73,28 @@ def verify(candidate, windows, expected):
     assert all(a in boxes and b in boxes for (a,_),(b,_) in edges)
     assert boxes["maxPlugin"]["text"].startswith("vst~ 2 2 @prefer VST3")
     assert boxes[names["bankState"]]["restore"] == ["none"]
-    assert boxes["wrapperOutput"]["text"] == "m4lwrappergainstage~"
-    assert boxes["driveRamp"]["text"] == "m4lwrappergainstage~ drive"
+    for stage in ("driveRamp", "wrapperOutput"):
+        check_embedded_graph(boxes[stage]["patcher"])
+    assert (("maxHostControl", 2), ("driveRamp", 2)) in edges
+    assert (("maxHostControl", 3), ("wrapperOutput", 4)) in edges
+    assert (("wrapperOutput", 2), (names["ctrl"], 0)) in edges
     for ch in (0,1):
         for edge in [((names["in"],ch),("wrapperOutput",ch)), ((names["in"],ch),("driveRamp",ch)),
                      (("driveRamp",ch),("maxPlugin",ch)), (("maxPlugin",ch),("wrapperOutput",ch+2)),
                      (("wrapperOutput",ch),(names["out"],ch))]:
             assert edge in edges, edge
-    classname = "m4lwrappergainstage~"
-    assert files[classname+".mxe64"] == (b"mx64",(windows/(classname+".mxe64")).read_bytes())
-    image = files[classname+"/executable"][1]
-    assert struct.unpack_from(">II",image) == (0xcafebabe,2)
-    assert {struct.unpack_from(">I",image,i)[0] for i in [8,28]} == {0x01000007,0x0100000c}
-    with zipfile.ZipFile(io.BytesIO(files[classname+"/zipfile"][1])) as archive:
-        assert archive.read(classname+".mxo/Contents/MacOS/"+classname) == image
-    assert not any("spectrewrapper2~" in n or "oxfordinflatorpeak2~" in n for n in files)
+    assert {kind for kind, _ in files.values()} <= {b"JSON", b"TEXT", b"PNG "}
+    assert b"m4lwrappergainstage~" not in files[candidate.name][1]
     for b in boxes.values():
         if b.get("maxclass") in ("jsui","v8ui"): assert b["filename"] in files
         if b.get("jspainterfile"): assert b["jspainterfile"] in files
-    print(candidate.name, "verified parameter identities, signal routing, resources and both platform payloads")
+    print(candidate.name, "verified parameter identities, signal routing, resources and embedded audio stages")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("devices", type=Path)
-    parser.add_argument("windows", type=Path)
     args = parser.parse_args()
     signatures = json.loads(Path(__file__).with_name("v1.4-parameters.json").read_text())
     for name, signature in signatures.items():
-        verify(args.devices / name, args.windows, signature)
+        verify(args.devices / name, signature)

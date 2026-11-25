@@ -28,43 +28,23 @@ Choose among five saturation styles, push Drive or engage Punish, then shape the
 
 ![Decapitator Wrapper v1.4 with style E selected, Punish engaged and automatic output trim](docs/images/decapitator.png)
 
-## How v1.4 works
+## How the wrappers work
 
-All three wrappers load their VST3 by name through Max’s `vst~` on both macOS and Windows. The shared adapter handles parameter mapping, plug-in state and latency reporting. A separate Max external, `m4lwrappergainstage~`, handles pre/post gain, metering and dry routing. Its C++ source is shared across platforms. Each cross-platform device embeds a universal macOS binary and a Windows x64 binary of this external.
+All three devices load the installed VST3 by name through Max’s `vst~`. The shared adapter maps parameters, restores the plug-in state stored in the Live Set and forwards latency changes. If loading fails, the wrapper lists the affected tracks and passes the original stereo input through at unity gain. After restoring the VST3 installation, restart Live and reopen the Set to recall its saved state.
 
-If a plug-in is missing, the wrapper lists the affected tracks and passes audio through dry. After restoring the VST3 installation, restart Live and reopen the Set to recall the saved plug-in state.
+The source build uses embedded Max `gen~` patches for the 5 ms gain ramps and the three-second stereo meters. Max generates the audio code on the user’s machine. Each source build produces one device file for macOS and Windows. The published v1.4 downloads used a compiled gain and meter external.
 
-## Build v1.4 from source
+A Max for Live license supports playback of devices with embedded Gen. Editing and saving the Gen patch in the Max editor requires a standalone Max license. [Cycling ’74 on Max for Live licensing](https://docs.cycling74.com/userguide/m4l/live_limitations/)
 
-To use a release, download the wrapper from Gumroad, unzip it and open the .amxd in Live. The tools below are for building from source.
+## Build from source
 
-On macOS, Python 3 runs the packaging script. The Xcode Command Line Tools provide the C++ compiler for the shared gain and meter external, which uses Cycling ’74’s Max SDK headers. If you use Git to fetch the headers, run these commands from the repository root:
-
-```sh
-git clone https://github.com/Cycling74/max-sdk-base.git deps/max-sdk-base
-git -C deps/max-sdk-base checkout c03a2922a2a8ff149165a1e2ea134e9321d6e202
-```
-
-Set `MAX_SDK_BASE` to use an existing Max SDK checkout. From a clean clone, one command builds all three wrappers in `dist/`:
+Run this command from the repository root with Python 3.9 or later. It builds all three standalone devices in `dist/` using only the Python standard library.
 
 ```sh
 python3 build.py
 ```
 
-For a single device, pass `decapitator`, `spectre` or `oxford-inflator`. Use `--output DIR` to select another output directory. All patches, parameter mappings and UI resources used by the build are in this repository.
-
-### Include Windows x64 support
-
-Build the shared gain and meter external once on Windows using the same Max SDK checkout, Visual Studio 2022 with Desktop development with C++, and CMake 3.25 or later:
-
-```powershell
-cmake -S host -B build/output -G "Visual Studio 17 2022" -A x64
-cmake --build build/output --config Release
-```
-
-Copy `m4lwrappergainstage~.mxe64` from `build/output/externals/` to the same directory on the Mac. Append `--windows-externals build/output/externals` to the Python build command. Each resulting `.amxd` then contains both platform binaries.
-
-The **Build and test wrappers** workflow runs this two-platform build on pushes to main and on pull requests. Its `m4l-wrappers` artifact contains all three devices.
+On Windows, use `py -3 build.py`. To build one device, pass `decapitator`, `spectre` or `oxford-inflator`. Use `--output DIR` to select a different output directory. Ableton Live, Max for Live and the licensed VST3 are needed to play and test the device.
 
 ## Development and verification
 
@@ -72,10 +52,13 @@ The Max host adapter and shared audio code live in `host/`. Each wrapper’s con
 
 When adding or updating a wrapper, preserve its Live parameter identifiers and per-instance plug-in state. Test recall by saving two differently configured instances in the previous version and reopening the Set after replacing the device at the same path. Also check automation, missing-plug-in recovery, CPU time and sample alignment against the VST3 loaded directly in Live. Include modes that change latency.
 
-Run the adapter and controller checks from the repository root:
+Run the archive, adapter and controller checks from the repository root. These checks also run in GitHub Actions.
 
 ```sh
+python3 tests/package.py dist
 node tests/max-host/adapter.cjs
 node tests/oxford.cjs
 node tests/spectre.cjs "dist/Spectre Wrapper.amxd"
 ```
+
+The portable DSP also has acoustic tests that run with a local installation of Max. The verification notes include the gain-ramp, metering, audio, recall and CPU comparisons. [Portable audio verification](tests/portable/verification.md)

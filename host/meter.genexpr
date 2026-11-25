@@ -1,0 +1,120 @@
+// Stereo input and output share a clock, so matching always compares the same samples.
+// A window is 30 display intervals; each interval is ten rounded 10 ms slices, as in v1.4.
+// Filter memory belongs to each of the four signals. Passing it explicitly keeps
+// the shelf and high-pass delays independent, including on an epoch change.
+kweight(x, shelf1, shelf2, high1, high2, clear) {
+    k = tan(pi * 1681.974450955533 / samplerate);
+    t = k / 0.7071752369554196;
+    a = 1 + t + k*k;
+    vh = 1.5848647011308556;
+    vb = pow(vh, 0.4996667741545416);
+    shelf = x * ((vh+vb*t+k*k)/a) + (clear ? 0 : shelf1);
+    nextShelf1 = x * (2*(k*k-vh)/a) - shelf * (2*(k*k-1)/a) + (clear ? 0 : shelf2);
+    nextShelf2 = x * ((vh-vb*t+k*k)/a) - shelf * ((1-t+k*k)/a);
+    h = tan(pi * 38.13547087602444 / samplerate);
+    u = h / 0.5003270373238773;
+    d = 1 + u + h*h;
+    result = shelf + (clear ? 0 : high1);
+    nextHigh1 = -2*shelf - result * (2*(h*h-1)/d) + (clear ? 0 : high2);
+    nextHigh2 = shelf - result * ((1-u+h*h)/d);
+    return result, nextShelf1, nextShelf2, nextHigh1, nextHigh2;
+}
+powerdb(x) { return 10 * log10(max(1e-24,x)); }
+peakdb(x) { return 20 * log10(max(1e-12,x)); }
+
+Param metering(0);
+Param dsprun(0);
+Param wet(0);
+Param output(0);
+Data slices(30, 6);
+History inputL_s1(0); History inputL_s2(0); History inputL_h1(0); History inputL_h2(0);
+History inputR_s1(0); History inputR_s2(0); History inputR_h1(0); History inputR_h2(0);
+History outputL_s1(0); History outputL_s2(0); History outputL_h1(0); History outputL_h2(0);
+History outputR_s1(0); History outputR_s2(0); History outputR_h1(0); History outputR_h2(0);
+History clearFilters(1);
+History previousEpoch(-1);
+History previousRun(-1);
+History previousOutput(0);
+History settledFrames(0);
+History reportEpoch(-1);
+History reportValid(0);
+History reportSettled(0);
+History position(0);
+History count(0);
+History index(0);
+History inPower(0);
+History postPower(0);
+History inWeight(0);
+History postWeight(0);
+History inPeak(0);
+History postPeak(0);
+History inLufs(-240);
+History inRms(-240);
+History inDbPeak(-240);
+History postLufs(-240);
+History postRms(-240);
+History postDbPeak(-240);
+
+length = 10 * max(1, floor(samplerate * 0.01 + 0.5));
+epoch = floor(metering / 2);
+dspStarted = previousRun != dsprun;
+previousRun = dsprun;
+clear = dspStarted || epoch != previousEpoch;
+previousEpoch = epoch;
+active = metering - 2*epoch;
+required = 30*length + floor(0.005*samplerate + 0.5);
+settledFrames = wet && !dspStarted && previousOutput == output ? min(required, settledFrames+1) : 0;
+previousOutput = output;
+tick = 0;
+if (clear) {
+    clearFilters = 1;
+    position = 0; count = 0; index = 0;
+    inPower = 0; postPower = 0; inWeight = 0; postWeight = 0;
+    inPeak = 0; postPeak = 0;
+}
+if (active) {
+    // Begin K-weighting
+    a, inputL_s1, inputL_s2, inputL_h1, inputL_h2 = kweight(in1, inputL_s1, inputL_s2, inputL_h1, inputL_h2, clearFilters);
+    b, inputR_s1, inputR_s2, inputR_h1, inputR_h2 = kweight(in2, inputR_s1, inputR_s2, inputR_h1, inputR_h2, clearFilters);
+    c, outputL_s1, outputL_s2, outputL_h1, outputL_h2 = kweight(in3, outputL_s1, outputL_s2, outputL_h1, outputL_h2, clearFilters);
+    d, outputR_s1, outputR_s2, outputR_h1, outputR_h2 = kweight(in4, outputR_s1, outputR_s2, outputR_h1, outputR_h2, clearFilters);
+    clearFilters = 0;
+    inWeight = inWeight + a*a + b*b;
+    postWeight = postWeight + c*c + d*d;
+    // End K-weighting
+    inPower = inPower + in1*in1 + in2*in2;
+    postPower = postPower + in3*in3 + in4*in4;
+    inPeak = max(inPeak, max(abs(in1), abs(in2)));
+    postPeak = max(postPeak, max(abs(in3), abs(in4)));
+    position = position + 1;
+    if (position >= length) {
+        position = 0;
+        poke(slices, inWeight, index, 0); poke(slices, postWeight, index, 1);
+        poke(slices, inPower, index, 2); poke(slices, postPower, index, 3);
+        poke(slices, inPeak, index, 4); poke(slices, postPeak, index, 5);
+        index = (index + 1) % 30;
+        count = min(30, count + 1);
+        if (count == 30) {
+            iw = 0; ow = 0; ip = 0; op = 0; im = 0; om = 0;
+            for (i = 0; i < 30; i += 1) {
+                iw += peek(slices, i, 0); ow += peek(slices, i, 1);
+                ip += peek(slices, i, 2); op += peek(slices, i, 3);
+                im = max(im, peek(slices, i, 4)); om = max(om, peek(slices, i, 5));
+            }
+            inLufs = powerdb(iw/(30*length)) - 0.691;
+            postLufs = powerdb(ow/(30*length)) - 0.691;
+            inRms = powerdb(ip/(60*length)); postRms = powerdb(op/(60*length));
+            inDbPeak = peakdb(im); postDbPeak = peakdb(om);
+        }
+        inPower = 0; postPower = 0; inWeight = 0; postWeight = 0; inPeak = 0; postPeak = 0;
+        // Max may collect this report several milliseconds after the tick. The
+        // flags must describe the same window as the six captured meter readings.
+        reportEpoch = epoch;
+        reportValid = count == 30;
+        reportSettled = settledFrames >= required;
+        tick = 1;
+    }
+}
+out1 = tick; out2 = reportEpoch; out3 = reportValid; out4 = reportSettled;
+out5 = inLufs; out6 = inRms; out7 = inDbPeak;
+out8 = postLufs; out9 = postRms; out10 = postDbPeak;
