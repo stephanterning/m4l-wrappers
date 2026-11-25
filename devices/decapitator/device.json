@@ -1,5 +1,5 @@
 {
-  "name": "Decapitator Wrapper",
+  "name": "Decapitator Wrapper V2",
   "product": {
     "name": "Decapitator",
     "cid": "56535453744463646563617069746174",
@@ -17,6 +17,7 @@
     "decapitator-panel.js": "devices/decapitator/decapitator-panel.js",
     "oxford-meter-peak.js": "shared/meter-ui.js",
     "oxford-transparent.js": "shared/transparent.js",
-    "wrapper-warning-overlay.js": "shared/warning-overlay.js"
+    "wrapper-warning-overlay.js": "shared/warning-overlay.js",
+    "wrapper-compensation-label.js": "shared/compensation-label.js"
   }
 }

@@ -21,12 +21,12 @@ def meter_box():
         add(gen, key, 20 + i*90, 20, maxclass="newobj", text=f"in {i+1}")
         connect(gen, key, 0, "dsp", i)
         connect(patch, key, 0, "gen", i)
-    add(gen, "dsp", 20, 90, maxclass="codebox", code=code, numinlets=4, numoutlets=10)
-    for i in range(10):
+    add(gen, "dsp", 20, 90, maxclass="codebox", code=code, numinlets=4, numoutlets=11)
+    for i in range(11):
         add(gen, f"out{i+1}", 10 + i*80, 170, maxclass="newobj", text=f"out {i+1}")
         connect(gen, "dsp", i, f"out{i+1}", 0)
     add(patch, "gen", 30, 110, maxclass="newobj", text="gen~", patcher=gen,
-        numinlets=4, numoutlets=10, outlettype=["signal"]*10)
+        numinlets=4, numoutlets=11, outlettype=["signal"]*11)
     add(patch, "commands", 425, 20, maxclass="inlet", index=5)
     connect(patch, "commands", 0, "gen", 0)
     add(patch, "dspState", 540, 20, maxclass="newobj", text="dspstate~")
@@ -39,11 +39,11 @@ def meter_box():
     connect(patch, "runs", 0, "generation", 0)
     connect(patch, "generation", 0, "gen", 0)
     add(patch, "tick", 20, 175, maxclass="newobj", text="edge~")
-    add(patch, "sample", 20, 220, maxclass="newobj", text="t " + " ".join(["b"]*9))
+    add(patch, "sample", 20, 220, maxclass="newobj", text="t " + " ".join(["b"]*10))
     connect(patch, "gen", 0, "tick", 0)
     connect(patch, "tick", 0, "sample", 0)
-    add(patch, "reading", 20, 325, maxclass="newobj", text="pack i i i f f f f f f")
-    for i in range(9):
+    add(patch, "reading", 20, 325, maxclass="newobj", text="pack i i i f f f f f f i")
+    for i in range(10):
         key = f"sample{i}"
         add(patch, key, 10 + i*90, 275, maxclass="newobj", text="snapshot~")
         connect(patch, "gen", i+1, key, 0)
@@ -53,6 +53,9 @@ def meter_box():
     add(patch, "out", 20, 425, maxclass="outlet", index=1)
     connect(patch, "reading", 0, "levels", 0)
     connect(patch, "levels", 0, "out", 0)
+    add(patch, "invalidate", 670, 90, maxclass="message", text="gainChanged")
+    connect(patch, "dspState", 0, "invalidate", 0)
+    connect(patch, "invalidate", 0, "out", 0)
     return dict(id="portableMeter", varname="portableMeter", maxclass="newobj",
                 text="p wrapperMeter", numinlets=5, numoutlets=1, outlettype=[""],
                 patching_rect=[420, 1310, 115, 22], patcher=patch)

@@ -37,12 +37,18 @@ function loadbang() {
         });
     });
 }
-function levels(epoch, valid, settled, il, ir, ip, ol, orms, op) {
+function gainChanged() {} // The production controller handles DSP lifecycle notifications.
+function levels(epoch, valid, settled, il, ir, ip, ol, orms, op, revision) {
     if (epoch !== sequence) return;
     allTicks++;
     if (valid) validTicks++;
-    log("levels", phase, valid, settled, il, ir, ip, ol, orms, op);
+    log("levels", phase, valid, settled, il, ir, ip, ol, orms, op, revision);
     if (phase === "tones" && validTicks === 3) {
+        enter("plugin edit");
+        outlet(5, [0.5, 5]);
+        outlet(0, "revision", 1);
+    } else if (phase === "plugin edit" && revision === 1 && settled) {
+        outlet(5, [1, 5]);
         enter("dry");
         outlet(0, "wet", 0);
     } else if (phase === "dry" && !settled) {

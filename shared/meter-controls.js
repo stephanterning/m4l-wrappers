@@ -1,22 +1,25 @@
 let playing=false,epoch=0,transportObserver=null;
-let latestLevels=null,canMatch=[false,false,false],driveDb=0,outputDb=0,matchAfter=0;
-let driveLinked=false,linkedGainSum=0;
+let latestLevels=null,canMatch=[false,false,false],driveDb=0,outputDb=0;
+let driveLinked=false,lastCompensationText="";
+let matchRevision=0;
+const meterParameters=[];
 let displayLevels=null,displayTicks=0;
 const rmsReferenceOffset=1.4; // Match the RMS calibration of Swiss Army Meter 5.2.
 const displaySmoothing=0.15; // About 0.6 s of visual damping for 10 Hz readings.
 const matchThreshold=0.1;
 function syncGains(){
     driveDb=Number(patch.getnamed("preDrive").getvalueof());
-    outlet(0,"drive",driveDb);
-    applyOutputTrim(Number(patch.getnamed("postOutput").getvalueof()));
+    outputDb=Number(patch.getnamed("postOutput").getvalueof());
     driveLinked=Number(patch.getnamed("driveLink").getvalueof())!==0;
-    linkedGainSum=driveDb+outputDb;
+    outlet(0,"drive",driveDb);
+    applyOutputGain();
 }
 function driveLinkChanged(value){
     const linked=Number(value)!==0;
     if(driveLinked===linked)return;
     driveLinked=linked;
-    linkedGainSum=driveDb+outputDb;
+    if(driveDb!==0)gainChanged();
+    applyOutputGain();
 }
 function watchTransport(){
     if(transportObserver)return;
@@ -34,35 +37,39 @@ function setPlaying(active){
     else outlet(0,"metering",2*epoch);
 }
 function gainChanged(){
-    matchAfter=Date.now()+3000;
+    outlet(0,"matchrevision",++matchRevision);
     setMatchAvailability([false,false,false]);
+}
+function noteParameter(slot,value){
+    if(Math.abs(meterParameters[slot]-value)<=1e-6)return;
+    meterParameters[slot]=value;
+    gainChanged();
 }
 function clampTrim(db){return Math.max(-24,Math.min(24,db));}
 function drive(db){
     db=Number(db);
-    const changed=db!==driveDb;
+    if(db===driveDb)return;
     driveDb=db;
     outlet(0,"drive",db);
-    if(!transportObserver||!changed)return;
     gainChanged();
-    if(!driveLinked)return;
-    const adjusted=clampTrim(linkedGainSum-driveDb);
-    if(adjusted===outputDb)return;
-    // Keep the reference sum even if the displayed Output is at its limit.
-    patch.getnamed("postOutput").message("set",adjusted);
-    applyOutputTrim(adjusted);
+    if(driveLinked)applyOutputGain();
 }
 function outputTrim(db){
     db=Number(db);
-    if(outputDb!==db)linkedGainSum=driveDb+db;
-    applyOutputTrim(db);
+    if(db===outputDb)return;
+    outputDb=db;
+    gainChanged();
+    applyOutputGain();
 }
-function applyOutputTrim(db){
-    if(outputDb!==db){
-        outputDb=db;
-        gainChanged();
+function applyOutputGain(){
+    const compensation=driveLinked ? -driveDb : 0;
+    outlet(0,"output",outputDb+compensation);
+    const rounded=Number(compensation.toFixed(1));
+    const text=(rounded>0 ? "+" : "")+rounded.toFixed(1)+" dB";
+    if(text!==lastCompensationText){
+        patch.getnamed("compensationReadout").message("set",text);
+        lastCompensationText=text;
     }
-    outlet(0,"output",db);
 }
 function setMatchAvailability(ready){
     if(ready.every((value,i)=>value===canMatch[i]))return;
@@ -95,19 +102,19 @@ function renderLevels(input,output){
     patch.getnamed("inputMeter").message("levels",...displayLevels[0]);
     patch.getnamed("outputMeter").message("levels",...displayLevels[1]);
 }
-function levels(token,valid,settled,il,ir,ip,ol,or,op){
+function levels(token,valid,settled,il,ir,ip,ol,or,op,revision){
     if(!playing||token!==epoch)return;
     if(!valid){setMatchAvailability([false,false,false]);return;}
     const input=[il,ir,ip],output=[ol,or,op];
     latestLevels=[input,output];
     renderLevels(input,output);
-    const ready=phase==="ready"&&settled&&Date.now()>=matchAfter;
+    const ready=phase==="ready"&&settled&&revision===matchRevision;
     setMatchAvailability(input.map((value,i)=>!!(
         ready&&value>-200&&output[i]>-200&&Math.abs(value-output[i])>matchThreshold+1e-9
     )));
 }
 function gainmatch(row){
-    if(phase!=="ready"||!canMatch[row]||!latestLevels)return;
+    if(phase!=="ready"||editorShowing||!canMatch[row]||!latestLevels)return;
     const newGain=outputDb+latestLevels[0][row]-latestLevels[1][row];
     const limited=clampTrim(newGain);
     patch.getnamed("postOutput").message("float",Math.round(limited*100)/100);

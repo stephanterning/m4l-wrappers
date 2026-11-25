@@ -1,3 +1,4 @@
+let captureErrorShown = false;
 let startupWarningPending = true;
 let holdingRetryPanel = false;
 let editorShowing = false;
@@ -9,6 +10,7 @@ const releaseRetryPanel = new Task(function () {
 }, this);
 
 function status(value) {
+    if (phase !== value) gainChanged();
     phase = value;
     if (value !== "ready") editorShowing = false;
     const enabled = value === "ready" ? 1 : 0;
@@ -17,6 +19,13 @@ function status(value) {
     if (value !== "loaderror") failureDetail = "";
     if (value === "ready") startupWarningPending = false;
     if (!holdingRetryPanel || value === "loading") showPanelStatus(value);
+}
+
+function stateerror(detail) {
+    if (captureErrorShown || phase !== "ready") return;
+    captureErrorShown = true;
+    outlet(1, "symbol", pluginName + " could not save its plug-in state. " + String(detail)
+        + " The previous snapshot is still available.");
 }
 
 function loadSavedPlugin() {
@@ -41,6 +50,11 @@ function editorWindow(value) {
     const open = phase === "ready" && Number(value) === 1;
     if (editorShowing === open) return;
     editorShowing = open;
+    if (!open) {
+        // Vendor presets can change sound without emitting a mapped parameter edit.
+        gainChanged();
+        outlet(0,"snapshot");
+    }
     for (const name of pointerControls) patch.getnamed(name).message("active", open ? 0 : 1);
     for (let i = 0; i < canMatch.length; i++)
         patch.getnamed("match" + i).message("active", !open && canMatch[i] ? 1 : 0);
@@ -83,8 +97,8 @@ function recordFailure(value, detail) {
             device.goto("canonical_parent");
         }
     } catch(e) { key = "d" + Date.now() + "_" + Math.random(); }
-    queue = new Dict(warningNamespace + "v2_" + set);
-    queue.set(key, JSON.stringify([track, detail])); queue.set("last", String(Date.now())); warningTask.schedule(650);
+    queue = new Dict("m4l_wrappers_warning_v2_" + set);
+    queue.set(key, JSON.stringify([pluginName, track, detail])); queue.set("last", String(Date.now())); warningTask.schedule(650);
 }
 function clear() {
     warningTask.cancel();
@@ -98,19 +112,23 @@ function flush() {
     const keys = [].concat(queue.getkeys() || []).filter(k => k !== "last");
     const groups = new Map();
     for (const k of keys) {
-        const [track, detail] = JSON.parse(String(queue.get(k)));
-        if (!groups.has(detail)) groups.set(detail, new Set());
-        groups.get(detail).add(track);
+        const [name, track, detail] = JSON.parse(String(queue.get(k)));
+        const reason = JSON.stringify([name,detail]);
+        if (!groups.has(reason)) groups.set(reason, new Set());
+        groups.get(reason).add(track);
     }
     queue.clear();
     if (!groups.size) return;
     const paragraphs = [];
-    for (const [detail, tracks] of groups) {
+    let allMissing = true;
+    for (const [reason, tracks] of groups) {
+        const [pluginName, detail] = JSON.parse(reason);
+        if (detail) allMissing = false;
         paragraphs.push(detail ? "An error occurred while loading " + pluginName + " (VST3).\n" + detail
                                : pluginName + " (VST3) was not found.");
         paragraphs.push("Tracks:\n" + Array.from(tracks).join("\n"));
     }
-    paragraphs.push(groups.size === 1 && groups.has("")
+    paragraphs.push(allMissing
         ? "Audio passes through dry. Restore the VST3 installation, then click Retry in the device."
         : "Audio passes through dry. Click Retry in the device to try again.");
     outlet(1, "symbol", paragraphs.join("\n\n"));

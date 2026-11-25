@@ -12,13 +12,13 @@
     "rect": [
       134.0,
       164.0,
-      922.0,
+      1002.0,
       169.0
     ],
     "openrect": [
       0.0,
       0.0,
-      922.0,
+      1002.0,
       169.0
     ],
     "openrectmode": 0,
@@ -30,7 +30,7 @@
       8.0
     ],
     "boxanimatetime": 500,
-    "devicewidth": 922.0,
+    "devicewidth": 1002.0,
     "description": "Wavesfactory Spectre VST3 stereo wrapper",
     "digest": "Spectre Wrapper",
     "tags": "VST3 Wavesfactory Spectre",
@@ -54,7 +54,7 @@
           "presentation_rect": [
             0,
             0,
-            922.0,
+            1002.0,
             169
           ],
           "patching_rect": [
@@ -62,7 +62,884 @@
             1100,
             922.0,
             169
-          ]
+          ],
+          "annotation": "Click Retry to look for the VST3 again if it fails to load. When the plug-in editor is open, click here to close it.",
+          "annotation_name": "Plug-in status"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param0",
+          "varname": "param0",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            30,
+            835,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 1 Frequency",
+              "parameter_shortname": "Band 1 Frequency",
+              "parameter_type": 0,
+              "parameter_mmin": 20.0,
+              "parameter_mmax": 20000.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                42.08000096992389
+              ],
+              "parameter_unitstyle": 3
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            609,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the frequency of this band.",
+          "annotation_name": "Band 1 Frequency"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param1",
+          "varname": "param1",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            180,
+            835,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 1 Gain",
+              "parameter_shortname": "Band 1 Gain",
+              "parameter_type": 0,
+              "parameter_mmin": 0.0,
+              "parameter_mmax": 12.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.0
+              ],
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            666,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the boost sent to this band's saturation stage.",
+          "annotation_name": "Band 1 Gain"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param2",
+          "varname": "param2",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            330,
+            835,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 1 Q",
+              "parameter_shortname": "Band 1 Q",
+              "parameter_type": 0,
+              "parameter_mmin": 0.1,
+              "parameter_mmax": 10.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.7070000234991312
+              ],
+              "parameter_unitstyle": 1
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            722,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets this band's bandwidth or shelf shape.",
+          "annotation_name": "Band 1 Q"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param6",
+          "varname": "param6",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            30,
+            901,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 2 Frequency",
+              "parameter_shortname": "Band 2 Frequency",
+              "parameter_type": 0,
+              "parameter_mmin": 20.0,
+              "parameter_mmax": 20000.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                164.0000025831755
+              ],
+              "parameter_unitstyle": 3
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            609,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the frequency of this band.",
+          "annotation_name": "Band 2 Frequency"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param7",
+          "varname": "param7",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            180,
+            901,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 2 Gain",
+              "parameter_shortname": "Band 2 Gain",
+              "parameter_type": 0,
+              "parameter_mmin": 0.0,
+              "parameter_mmax": 12.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.0
+              ],
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            666,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the boost sent to this band's saturation stage.",
+          "annotation_name": "Band 2 Gain"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param8",
+          "varname": "param8",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            330,
+            901,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 2 Q",
+              "parameter_shortname": "Band 2 Q",
+              "parameter_type": 0,
+              "parameter_mmin": 0.1,
+              "parameter_mmax": 10.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.7070000234991312
+              ],
+              "parameter_unitstyle": 1
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            722,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets this band's bandwidth or shelf shape.",
+          "annotation_name": "Band 2 Q"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param12",
+          "varname": "param12",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            30,
+            967,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 3 Frequency",
+              "parameter_shortname": "Band 3 Frequency",
+              "parameter_type": 0,
+              "parameter_mmin": 20.0,
+              "parameter_mmax": 20000.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                632.5000626229526
+              ],
+              "parameter_unitstyle": 3
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            609,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the frequency of this band.",
+          "annotation_name": "Band 3 Frequency"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param13",
+          "varname": "param13",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            180,
+            967,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 3 Gain",
+              "parameter_shortname": "Band 3 Gain",
+              "parameter_type": 0,
+              "parameter_mmin": 0.0,
+              "parameter_mmax": 12.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.0
+              ],
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            666,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the boost sent to this band's saturation stage.",
+          "annotation_name": "Band 3 Gain"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param14",
+          "varname": "param14",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            330,
+            967,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 3 Q",
+              "parameter_shortname": "Band 3 Q",
+              "parameter_type": 0,
+              "parameter_mmin": 0.1,
+              "parameter_mmax": 10.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.7070000234991312
+              ],
+              "parameter_unitstyle": 1
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            722,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets this band's bandwidth or shelf shape.",
+          "annotation_name": "Band 3 Q"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param18",
+          "varname": "param18",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            30,
+            1033,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 4 Frequency",
+              "parameter_shortname": "Band 4 Frequency",
+              "parameter_type": 0,
+              "parameter_mmin": 20.0,
+              "parameter_mmax": 20000.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                2459.9995023035603
+              ],
+              "parameter_unitstyle": 3
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            609,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the frequency of this band.",
+          "annotation_name": "Band 4 Frequency"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param19",
+          "varname": "param19",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            180,
+            1033,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 4 Gain",
+              "parameter_shortname": "Band 4 Gain",
+              "parameter_type": 0,
+              "parameter_mmin": 0.0,
+              "parameter_mmax": 12.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.0
+              ],
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            666,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the boost sent to this band's saturation stage.",
+          "annotation_name": "Band 4 Gain"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param20",
+          "varname": "param20",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            330,
+            1033,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 4 Q",
+              "parameter_shortname": "Band 4 Q",
+              "parameter_type": 0,
+              "parameter_mmin": 0.1,
+              "parameter_mmax": 10.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.7070000234991312
+              ],
+              "parameter_unitstyle": 1
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            722,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets this band's bandwidth or shelf shape.",
+          "annotation_name": "Band 4 Q"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param24",
+          "varname": "param24",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            30,
+            1099,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 5 Frequency",
+              "parameter_shortname": "Band 5 Frequency",
+              "parameter_type": 0,
+              "parameter_mmin": 20.0,
+              "parameter_mmax": 20000.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                9600.000806923503
+              ],
+              "parameter_unitstyle": 3
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            609,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the frequency of this band.",
+          "annotation_name": "Band 5 Frequency"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param25",
+          "varname": "param25",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            180,
+            1099,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 5 Gain",
+              "parameter_shortname": "Band 5 Gain",
+              "parameter_type": 0,
+              "parameter_mmin": 0.0,
+              "parameter_mmax": 12.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.0
+              ],
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            666,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets the boost sent to this band's saturation stage.",
+          "annotation_name": "Band 5 Gain"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param26",
+          "varname": "param26",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            330,
+            1099,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Band 5 Q",
+              "parameter_shortname": "Band 5 Q",
+              "parameter_type": 0,
+              "parameter_mmin": 0.1,
+              "parameter_mmax": 10.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.7070000234991312
+              ],
+              "parameter_unitstyle": 1
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            722,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Sets this band's bandwidth or shelf shape.",
+          "annotation_name": "Band 5 Q"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param30",
+          "varname": "param30",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            30,
+            1165,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Spectre Input",
+              "parameter_shortname": "Spectre Input",
+              "parameter_type": 0,
+              "parameter_mmin": -12.0,
+              "parameter_mmax": 12.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.0
+              ],
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            609,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Adjusts the level entering Spectre's processing.",
+          "annotation_name": "Input"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param31",
+          "varname": "param31",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            180,
+            1165,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Spectre Output",
+              "parameter_shortname": "Spectre Output",
+              "parameter_type": 0,
+              "parameter_mmin": -12.0,
+              "parameter_mmax": 12.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0.0
+              ],
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            666,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Adjusts Spectre's internal output level.",
+          "annotation_name": "Output"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-param32",
+          "varname": "param32",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            330,
+            1165,
+            120,
+            19
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Mix",
+              "parameter_shortname": "Mix",
+              "parameter_type": 0,
+              "parameter_mmin": 0.0,
+              "parameter_mmax": 100.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                50.0
+              ],
+              "parameter_unitstyle": 5
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            722,
+            67,
+            32,
+            28
+          ],
+          "hidden": 1,
+          "jspainterfile": "spectre-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Blends the dry and processed signals.",
+          "annotation_name": "Mix"
+        }
+      },
+      {
+        "box": {
+          "id": "sp-face",
+          "varname": "face",
+          "maxclass": "v8ui",
+          "patching_rect": [
+            10,
+            10,
+            610,
+            169
+          ],
+          "numinlets": 1,
+          "numoutlets": 1,
+          "outlettype": [
+            ""
+          ],
+          "filename": "spectre-bands-v1.js",
+          "background": 1,
+          "presentation": 1,
+          "presentation_rect": [
+            163,
+            0,
+            610,
+            169
+          ],
+          "annotation": "Drag a band to set frequency and gain. Alt/Option-drag adjusts Q. Cmd-drag (Ctrl on Windows) adjusts frequency only. Right-click cycles saturation type. Hold Cmd/Ctrl to cycle backward. Use the Band and Global tabs to switch between selected-band and plug-in-wide settings.",
+          "annotation_name": "Spectre"
         }
       },
       {
@@ -171,7 +1048,6 @@
       {
         "box": {
           "appearance": 3,
-          "hint": "Gain before Spectre",
           "id": "ox-preDrive",
           "maxclass": "live.dial",
           "numinlets": 1,
@@ -189,7 +1065,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            59.0,
+            79.0,
             51.0,
             62.0,
             63.0
@@ -209,7 +1085,9 @@
               "parameter_unitstyle": 4
             }
           },
-          "varname": "preDrive"
+          "varname": "preDrive",
+          "annotation": "Adjusts the signal level before it reaches Spectre.",
+          "annotation_name": "Pre Gain"
         }
       },
       {
@@ -234,7 +1112,6 @@
       {
         "box": {
           "appearance": 3,
-          "hint": "Gain after Spectre",
           "id": "ox-postOutput",
           "maxclass": "live.dial",
           "numinlets": 1,
@@ -252,7 +1129,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            736.0,
+            796.0,
             51.0,
             62.0,
             63.0
@@ -272,7 +1149,9 @@
               "parameter_unitstyle": 4
             }
           },
-          "varname": "postOutput"
+          "varname": "postOutput",
+          "annotation": "Adjusts the signal level after Spectre, independently of output compensation.",
+          "annotation_name": "Post Gain"
         }
       },
       {
@@ -297,8 +1176,7 @@
       {
         "box": {
           "appearance": 1,
-          "fontsize": 10.0,
-          "hint": "Offset Drive changes with the opposite change to Output.",
+          "fontsize": 9.0,
           "id": "ox-driveLink",
           "maxclass": "live.text",
           "numinlets": 1,
@@ -316,16 +1194,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            71.0,
-            126.0,
-            40.0,
-            14.0
+            102.0,
+            128.0,
+            16.0,
+            15.0
           ],
           "saved_attribute_attributes": {
             "valueof": {
               "parameter_enum": [
-                "val1",
-                "val2"
+                "Off",
+                "On"
               ],
               "parameter_initial": [
                 0
@@ -334,13 +1212,102 @@
               "parameter_longname": "Drive Link",
               "parameter_mmax": 1,
               "parameter_modmode": 0,
-              "parameter_shortname": "Link",
+              "parameter_shortname": "Compensate output",
               "parameter_type": 2
             }
           },
-          "text": "Link",
-          "texton": "Link",
-          "varname": "driveLink"
+          "text": "",
+          "texton": "",
+          "varname": "driveLink",
+          "annotation": "Offsets Pre Gain after the plug-in. For example, +6 dB of Pre Gain adds −6 dB after the plug-in. Post Gain stays independently adjustable.",
+          "annotation_name": "Compensate output"
+        }
+      },
+      {
+        "box": {
+          "id": "compensateOutputLabel",
+          "varname": "compensateOutputLabel",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            59.0,
+            136.0,
+            106.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            57.0,
+            145.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Offsets Pre Gain after the plug-in. For example, +6 dB of Pre Gain adds −6 dB after the plug-in. Post Gain stays independently adjustable.",
+          "annotation_name": "Compensate output",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "Compensate output"
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "compensationLabel",
+          "varname": "compensationLabel",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            450.0,
+            178.0,
+            106.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            774.0,
+            145.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Shows how much gain the compensation adds after the plug-in, in addition to Post Gain. It is the opposite of Pre Gain when enabled and 0 dB when disabled.",
+          "annotation_name": "Output compensation",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "Output compensation"
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "compensationReadout",
+          "varname": "compensationReadout",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            450.0,
+            196.0,
+            62.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            774.0,
+            128.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Shows how much gain the compensation adds after the plug-in, in addition to Post Gain. It is the opposite of Pre Gain when enabled and 0 dB when disabled.",
+          "annotation_name": "Output compensation",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "0.0 dB"
+          ]
         }
       },
       {
@@ -366,7 +1333,6 @@
         "box": {
           "background": 1,
           "filename": "spectre-meter-v1.js",
-          "hint": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
           "id": "ox-inputMeter",
           "jsarguments": [
             0
@@ -391,14 +1357,15 @@
             56.0,
             169.0
           ],
-          "varname": "inputMeter"
+          "varname": "inputMeter",
+          "annotation": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
+          "annotation_name": "Input meter"
         }
       },
       {
         "box": {
           "background": 1,
           "filename": "spectre-meter-v1.js",
-          "hint": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
           "id": "ox-outputMeter",
           "jsarguments": [
             1
@@ -418,18 +1385,19 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            801.0,
+            881.0,
             0.0,
             120.0,
             169.0
           ],
-          "varname": "outputMeter"
+          "varname": "outputMeter",
+          "annotation": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
+          "annotation_name": "Output meter"
         }
       },
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input short-term LUFS",
           "id": "ox-match0",
           "jspainterfile": "spectre-transparent.js",
           "maxclass": "live.text",
@@ -449,7 +1417,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            862.0,
+            942.0,
             43.0,
             54.0,
             20.0
@@ -457,7 +1425,9 @@
           "text": "Gain match",
           "texton": "Gain match",
           "varname": "match0",
-          "active": 0
+          "active": 0,
+          "annotation": "Adjusts Post Gain to match the input's short-term loudness (LUFS).",
+          "annotation_name": "Gain match (LUFS)"
         }
       },
       {
@@ -482,7 +1452,6 @@
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input RMS",
           "id": "ox-match1",
           "jspainterfile": "spectre-transparent.js",
           "maxclass": "live.text",
@@ -502,7 +1471,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            862.0,
+            942.0,
             85.0,
             54.0,
             20.0
@@ -510,7 +1479,9 @@
           "text": "Gain match",
           "texton": "Gain match",
           "varname": "match1",
-          "active": 0
+          "active": 0,
+          "annotation": "Adjusts Post Gain to match the input's RMS level.",
+          "annotation_name": "Gain match (RMS)"
         }
       },
       {
@@ -535,7 +1506,6 @@
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input sample peak",
           "id": "ox-match2",
           "jspainterfile": "spectre-transparent.js",
           "maxclass": "live.text",
@@ -555,7 +1525,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            862.0,
+            942.0,
             127.0,
             54.0,
             20.0
@@ -563,7 +1533,9 @@
           "text": "Gain match",
           "texton": "Gain match",
           "varname": "match2",
-          "active": 0
+          "active": 0,
+          "annotation": "Adjusts Post Gain to match the input's sample peak level.",
+          "annotation_name": "Gain match (peak)"
         }
       },
       {
@@ -744,68 +1716,6 @@
       },
       {
         "box": {
-          "id": "sp-face",
-          "varname": "face",
-          "maxclass": "v8ui",
-          "patching_rect": [
-            10,
-            10,
-            610,
-            169
-          ],
-          "numinlets": 1,
-          "numoutlets": 1,
-          "outlettype": [
-            ""
-          ],
-          "filename": "spectre-bands-v1.js",
-          "background": 1,
-          "presentation": 1,
-          "presentation_rect": [
-            123,
-            0,
-            610,
-            169
-          ],
-          "hint": "Drag a band to set frequency and gain. Option-drag adjusts Q. Command-drag adjusts frequency. Right-click cycles saturation type; Command-right-click cycles backward."
-        }
-      },
-      {
-        "box": {
-          "id": "sp-param0",
-          "varname": "param0",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            30,
-            835,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 1 Frequency",
-              "parameter_shortname": "Band 1 Frequency",
-              "parameter_type": 0,
-              "parameter_mmin": 20.0,
-              "parameter_mmax": 20000.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                42.08000096992389
-              ],
-              "parameter_unitstyle": 3
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param0ctl",
           "varname": "param0ctl",
           "maxclass": "newobj",
@@ -825,40 +1735,6 @@
       },
       {
         "box": {
-          "id": "sp-param1",
-          "varname": "param1",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            180,
-            835,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 1 Gain",
-              "parameter_shortname": "Band 1 Gain",
-              "parameter_type": 0,
-              "parameter_mmin": 0.0,
-              "parameter_mmax": 12.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.0
-              ],
-              "parameter_unitstyle": 4
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param1ctl",
           "varname": "param1ctl",
           "maxclass": "newobj",
@@ -874,40 +1750,6 @@
             ""
           ],
           "text": "prepend control 1"
-        }
-      },
-      {
-        "box": {
-          "id": "sp-param2",
-          "varname": "param2",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            330,
-            835,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 1 Q",
-              "parameter_shortname": "Band 1 Q",
-              "parameter_type": 0,
-              "parameter_mmin": 0.1,
-              "parameter_mmax": 10.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.7070000234991312
-              ],
-              "parameter_unitstyle": 1
-            }
-          }
         }
       },
       {
@@ -1117,40 +1959,6 @@
       },
       {
         "box": {
-          "id": "sp-param6",
-          "varname": "param6",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            30,
-            901,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 2 Frequency",
-              "parameter_shortname": "Band 2 Frequency",
-              "parameter_type": 0,
-              "parameter_mmin": 20.0,
-              "parameter_mmax": 20000.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                164.0000025831755
-              ],
-              "parameter_unitstyle": 3
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param6ctl",
           "varname": "param6ctl",
           "maxclass": "newobj",
@@ -1170,40 +1978,6 @@
       },
       {
         "box": {
-          "id": "sp-param7",
-          "varname": "param7",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            180,
-            901,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 2 Gain",
-              "parameter_shortname": "Band 2 Gain",
-              "parameter_type": 0,
-              "parameter_mmin": 0.0,
-              "parameter_mmax": 12.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.0
-              ],
-              "parameter_unitstyle": 4
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param7ctl",
           "varname": "param7ctl",
           "maxclass": "newobj",
@@ -1219,40 +1993,6 @@
             ""
           ],
           "text": "prepend control 7"
-        }
-      },
-      {
-        "box": {
-          "id": "sp-param8",
-          "varname": "param8",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            330,
-            901,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 2 Q",
-              "parameter_shortname": "Band 2 Q",
-              "parameter_type": 0,
-              "parameter_mmin": 0.1,
-              "parameter_mmax": 10.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.7070000234991312
-              ],
-              "parameter_unitstyle": 1
-            }
-          }
         }
       },
       {
@@ -1462,40 +2202,6 @@
       },
       {
         "box": {
-          "id": "sp-param12",
-          "varname": "param12",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            30,
-            967,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 3 Frequency",
-              "parameter_shortname": "Band 3 Frequency",
-              "parameter_type": 0,
-              "parameter_mmin": 20.0,
-              "parameter_mmax": 20000.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                632.5000626229526
-              ],
-              "parameter_unitstyle": 3
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param12ctl",
           "varname": "param12ctl",
           "maxclass": "newobj",
@@ -1515,40 +2221,6 @@
       },
       {
         "box": {
-          "id": "sp-param13",
-          "varname": "param13",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            180,
-            967,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 3 Gain",
-              "parameter_shortname": "Band 3 Gain",
-              "parameter_type": 0,
-              "parameter_mmin": 0.0,
-              "parameter_mmax": 12.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.0
-              ],
-              "parameter_unitstyle": 4
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param13ctl",
           "varname": "param13ctl",
           "maxclass": "newobj",
@@ -1564,40 +2236,6 @@
             ""
           ],
           "text": "prepend control 13"
-        }
-      },
-      {
-        "box": {
-          "id": "sp-param14",
-          "varname": "param14",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            330,
-            967,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 3 Q",
-              "parameter_shortname": "Band 3 Q",
-              "parameter_type": 0,
-              "parameter_mmin": 0.1,
-              "parameter_mmax": 10.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.7070000234991312
-              ],
-              "parameter_unitstyle": 1
-            }
-          }
         }
       },
       {
@@ -1807,40 +2445,6 @@
       },
       {
         "box": {
-          "id": "sp-param18",
-          "varname": "param18",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            30,
-            1033,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 4 Frequency",
-              "parameter_shortname": "Band 4 Frequency",
-              "parameter_type": 0,
-              "parameter_mmin": 20.0,
-              "parameter_mmax": 20000.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                2459.9995023035603
-              ],
-              "parameter_unitstyle": 3
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param18ctl",
           "varname": "param18ctl",
           "maxclass": "newobj",
@@ -1860,40 +2464,6 @@
       },
       {
         "box": {
-          "id": "sp-param19",
-          "varname": "param19",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            180,
-            1033,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 4 Gain",
-              "parameter_shortname": "Band 4 Gain",
-              "parameter_type": 0,
-              "parameter_mmin": 0.0,
-              "parameter_mmax": 12.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.0
-              ],
-              "parameter_unitstyle": 4
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param19ctl",
           "varname": "param19ctl",
           "maxclass": "newobj",
@@ -1909,40 +2479,6 @@
             ""
           ],
           "text": "prepend control 19"
-        }
-      },
-      {
-        "box": {
-          "id": "sp-param20",
-          "varname": "param20",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            330,
-            1033,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 4 Q",
-              "parameter_shortname": "Band 4 Q",
-              "parameter_type": 0,
-              "parameter_mmin": 0.1,
-              "parameter_mmax": 10.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.7070000234991312
-              ],
-              "parameter_unitstyle": 1
-            }
-          }
         }
       },
       {
@@ -2152,40 +2688,6 @@
       },
       {
         "box": {
-          "id": "sp-param24",
-          "varname": "param24",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            30,
-            1099,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 5 Frequency",
-              "parameter_shortname": "Band 5 Frequency",
-              "parameter_type": 0,
-              "parameter_mmin": 20.0,
-              "parameter_mmax": 20000.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                9600.000806923503
-              ],
-              "parameter_unitstyle": 3
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param24ctl",
           "varname": "param24ctl",
           "maxclass": "newobj",
@@ -2205,40 +2707,6 @@
       },
       {
         "box": {
-          "id": "sp-param25",
-          "varname": "param25",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            180,
-            1099,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 5 Gain",
-              "parameter_shortname": "Band 5 Gain",
-              "parameter_type": 0,
-              "parameter_mmin": 0.0,
-              "parameter_mmax": 12.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.0
-              ],
-              "parameter_unitstyle": 4
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param25ctl",
           "varname": "param25ctl",
           "maxclass": "newobj",
@@ -2254,40 +2722,6 @@
             ""
           ],
           "text": "prepend control 25"
-        }
-      },
-      {
-        "box": {
-          "id": "sp-param26",
-          "varname": "param26",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            330,
-            1099,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Band 5 Q",
-              "parameter_shortname": "Band 5 Q",
-              "parameter_type": 0,
-              "parameter_mmin": 0.1,
-              "parameter_mmax": 10.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.7070000234991312
-              ],
-              "parameter_unitstyle": 1
-            }
-          }
         }
       },
       {
@@ -2497,40 +2931,6 @@
       },
       {
         "box": {
-          "id": "sp-param30",
-          "varname": "param30",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            30,
-            1165,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Spectre Input",
-              "parameter_shortname": "Spectre Input",
-              "parameter_type": 0,
-              "parameter_mmin": -12.0,
-              "parameter_mmax": 12.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.0
-              ],
-              "parameter_unitstyle": 4
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param30ctl",
           "varname": "param30ctl",
           "maxclass": "newobj",
@@ -2550,40 +2950,6 @@
       },
       {
         "box": {
-          "id": "sp-param31",
-          "varname": "param31",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            180,
-            1165,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Spectre Output",
-              "parameter_shortname": "Spectre Output",
-              "parameter_type": 0,
-              "parameter_mmin": -12.0,
-              "parameter_mmax": 12.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0.0
-              ],
-              "parameter_unitstyle": 4
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "sp-param31ctl",
           "varname": "param31ctl",
           "maxclass": "newobj",
@@ -2599,40 +2965,6 @@
             ""
           ],
           "text": "prepend control 31"
-        }
-      },
-      {
-        "box": {
-          "id": "sp-param32",
-          "varname": "param32",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            330,
-            1165,
-            120,
-            19
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Mix",
-              "parameter_shortname": "Mix",
-              "parameter_type": 0,
-              "parameter_mmin": 0.0,
-              "parameter_mmax": 100.0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                50.0
-              ],
-              "parameter_unitstyle": 5
-            }
-          }
         }
       },
       {
@@ -3018,7 +3350,18 @@
             195,
             22
           ],
-          "text": "vst~ 2 2 @prefer VST3 @autosave 0",
+          "text": "vst~ 2 2 @prefer VST3 @autosave 0 @parameter_enable 1",
+          "saved_object_attributes": {
+            "parameter_enable": 1
+          },
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Private plug-in host",
+              "parameter_shortname": "Host",
+              "parameter_type": 3,
+              "parameter_invisible": 2
+            }
+          },
           "numinlets": 2,
           "numoutlets": 8
         }
@@ -4535,7 +4878,7 @@
       ],
       "ox-driveLink": [
         "Drive Link",
-        "Link",
+        "Compensate output",
         0
       ],
       "ox-postOutput": [

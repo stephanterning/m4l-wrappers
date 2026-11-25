@@ -62,6 +62,7 @@ function status(s) {
     s = String(s);
     if (state !== s) {
         state = s;
+        updateMappingTargets();
         mgraphics.redraw();
     }
 }
@@ -82,7 +83,11 @@ function setView(isGlobal, band) {
     if (globalPage === isGlobal && selected === band) return;
     globalPage = isGlobal;
     selected = band;
+    updateMappingTargets();
     mgraphics.redraw();
+}
+function updateMappingTargets() {
+    outlet(0, "mappingTargets", state === "ready" ? (globalPage ? 30 : selected * 6) : -1);
 }
 function pick(i) { setView(false,i); }
 

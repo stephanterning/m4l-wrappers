@@ -12,13 +12,13 @@
     "rect": [
       134.0,
       164.0,
-      630.0,
+      710.0,
       169.0
     ],
     "openrect": [
       0.0,
       0.0,
-      630.0,
+      710.0,
       169.0
     ],
     "openrectmode": 0,
@@ -30,7 +30,7 @@
       8.0
     ],
     "boxanimatetime": 500,
-    "devicewidth": 630.0,
+    "devicewidth": 710.0,
     "description": "Sonnox Oxford Inflator VST3 · stereo",
     "digest": "Oxford Inflator",
     "tags": "VST3 Sonnox",
@@ -54,7 +54,7 @@
           "presentation_rect": [
             0,
             0,
-            630.0,
+            710.0,
             169.0
           ],
           "patching_rect": [
@@ -62,7 +62,9 @@
             1100,
             630.0,
             169.0
-          ]
+          ],
+          "annotation": "If the VST3 is missing or fails to load, click Retry to try loading it again. When the plug-in editor is open, click the shaded area to close it.",
+          "annotation_name": "Plug-in status"
         }
       },
       {
@@ -86,7 +88,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            123.0,
+            163.0,
             0.0,
             318.0,
             169.0
@@ -97,7 +99,6 @@
       {
         "box": {
           "fontsize": 11.0,
-          "hint": "Input Gain",
           "id": "obj-8",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.slider",
@@ -116,7 +117,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            128.0,
+            168.0,
             29.0,
             54.0,
             132.0
@@ -154,7 +155,9 @@
             0.87,
             1.0
           ],
-          "varname": "input"
+          "varname": "input",
+          "annotation": "Adjusts the signal level feeding Oxford Inflator's own processing.",
+          "annotation_name": "Input Gain"
         }
       },
       {
@@ -179,7 +182,6 @@
       {
         "box": {
           "fontsize": 11.0,
-          "hint": "Effect",
           "id": "obj-10",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.slider",
@@ -198,7 +200,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            190.0,
+            230.0,
             29.0,
             54.0,
             132.0
@@ -235,7 +237,9 @@
             0.87,
             1.0
           ],
-          "varname": "amount"
+          "varname": "amount",
+          "annotation": "Sets the amount of harmonic enhancement applied by Oxford Inflator.",
+          "annotation_name": "Effect"
         }
       },
       {
@@ -260,7 +264,6 @@
       {
         "box": {
           "fontsize": 11.0,
-          "hint": "Curve",
           "id": "obj-12",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.slider",
@@ -279,7 +282,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            318.0,
+            358.0,
             29.0,
             54.0,
             132.0
@@ -317,7 +320,9 @@
             0.87,
             1.0
           ],
-          "varname": "curve"
+          "varname": "curve",
+          "annotation": "Changes the harmonic character of the effect.",
+          "annotation_name": "Curve"
         }
       },
       {
@@ -342,7 +347,6 @@
       {
         "box": {
           "fontsize": 11.0,
-          "hint": "Output Gain",
           "id": "obj-14",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.slider",
@@ -361,7 +365,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            382.0,
+            422.0,
             29.0,
             54.0,
             132.0
@@ -399,7 +403,9 @@
             0.87,
             1.0
           ],
-          "varname": "output"
+          "varname": "output",
+          "annotation": "Adjusts the level leaving Oxford Inflator before the wrapper's Post Gain and output compensation.",
+          "annotation_name": "Output Gain"
         }
       },
       {
@@ -430,15 +436,13 @@
             1.0
           ],
           "fontsize": 11.0,
-          "hint": "Effect In",
           "id": "obj-16",
           "jspainterfile": "oxford-transparent.js",
-          "maxclass": "live.text",
+          "maxclass": "live.toggle",
           "numinlets": 1,
-          "numoutlets": 2,
+          "numoutlets": 1,
           "outlettype": [
-            "",
-            ""
+            "int"
           ],
           "parameter_enable": 1,
           "patching_rect": [
@@ -449,7 +453,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            252.0,
+            292.0,
             130.0,
             58.0,
             26.0
@@ -460,8 +464,8 @@
             },
             "valueof": {
               "parameter_enum": [
-                "val1",
-                "val2"
+                "Off",
+                "On"
               ],
               "parameter_initial": [
                 1
@@ -475,9 +479,9 @@
               "parameter_unitstyle": 9
             }
           },
-          "text": "Effect In",
-          "texton": "Effect In",
-          "varname": "effectIn"
+          "varname": "effectIn",
+          "annotation": "Switches Oxford Inflator's enhancement on or off.",
+          "annotation_name": "Effect In"
         }
       },
       {
@@ -508,15 +512,13 @@
             1.0
           ],
           "fontsize": 11.0,
-          "hint": "Band Split",
           "id": "obj-18",
           "jspainterfile": "oxford-transparent.js",
-          "maxclass": "live.text",
+          "maxclass": "live.toggle",
           "numinlets": 1,
-          "numoutlets": 2,
+          "numoutlets": 1,
           "outlettype": [
-            "",
-            ""
+            "int"
           ],
           "parameter_enable": 1,
           "patching_rect": [
@@ -527,7 +529,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            252.0,
+            292.0,
             98.0,
             58.0,
             26.0
@@ -538,8 +540,8 @@
             },
             "valueof": {
               "parameter_enum": [
-                "val1",
-                "val2"
+                "Off",
+                "On"
               ],
               "parameter_initial": [
                 0
@@ -553,9 +555,9 @@
               "parameter_unitstyle": 9
             }
           },
-          "text": "Band Split",
-          "texton": "Band Split",
-          "varname": "split"
+          "varname": "split",
+          "annotation": "Applies Oxford Inflator to low, mid and high bands separately. Turn it off for full-range processing.",
+          "annotation_name": "Band Split"
         }
       },
       {
@@ -586,15 +588,13 @@
             1.0
           ],
           "fontsize": 11.0,
-          "hint": "Clip 0 dB",
           "id": "obj-20",
           "jspainterfile": "oxford-transparent.js",
-          "maxclass": "live.text",
+          "maxclass": "live.toggle",
           "numinlets": 1,
-          "numoutlets": 2,
+          "numoutlets": 1,
           "outlettype": [
-            "",
-            ""
+            "int"
           ],
           "parameter_enable": 1,
           "patching_rect": [
@@ -605,7 +605,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            252.0,
+            292.0,
             66.0,
             58.0,
             26.0
@@ -616,8 +616,8 @@
             },
             "valueof": {
               "parameter_enum": [
-                "val1",
-                "val2"
+                "Off",
+                "On"
               ],
               "parameter_initial": [
                 1
@@ -631,9 +631,9 @@
               "parameter_unitstyle": 9
             }
           },
-          "text": "Clip 0 dB",
-          "texton": "Clip 0 dB",
-          "varname": "clip"
+          "varname": "clip",
+          "annotation": "Clips the signal feeding the Oxford Inflator effect at 0 dBFS.",
+          "annotation_name": "Clip 0 dB"
         }
       },
       {
@@ -715,7 +715,6 @@
       {
         "box": {
           "fontsize": 11.0,
-          "hint": "Open Sonnox or retry loading if the VST3 is missing.",
           "id": "obj-7",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.text",
@@ -735,14 +734,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            125.0,
+            165.0,
             2.0,
             314.0,
             23.0
           ],
           "text": "Öppna plugin",
           "texton": "Öppna plugin",
-          "varname": "editorButton"
+          "varname": "editorButton",
+          "annotation": "Opens the Oxford Inflator plug-in editor.",
+          "annotation_name": "Open plug-in"
         }
       },
       {
@@ -851,7 +852,6 @@
       {
         "box": {
           "appearance": 3,
-          "hint": "Gain before Oxford",
           "id": "ox-preDrive",
           "maxclass": "live.dial",
           "numinlets": 1,
@@ -869,7 +869,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            59.0,
+            79.0,
             51.0,
             62.0,
             63.0
@@ -889,7 +889,9 @@
               "parameter_unitstyle": 4
             }
           },
-          "varname": "preDrive"
+          "varname": "preDrive",
+          "annotation": "Adjusts the signal level before Oxford Inflator. With Compensate output enabled, the opposite adjustment is applied after the plug-in.",
+          "annotation_name": "Pre Gain"
         }
       },
       {
@@ -914,7 +916,6 @@
       {
         "box": {
           "appearance": 3,
-          "hint": "Gain after Oxford",
           "id": "ox-postOutput",
           "maxclass": "live.dial",
           "numinlets": 1,
@@ -932,7 +933,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            444.0,
+            504.0,
             51.0,
             62.0,
             63.0
@@ -952,7 +953,9 @@
               "parameter_unitstyle": 4
             }
           },
-          "varname": "postOutput"
+          "varname": "postOutput",
+          "annotation": "Adjusts the signal level after Oxford Inflator, independently of output compensation.",
+          "annotation_name": "Post Gain"
         }
       },
       {
@@ -977,8 +980,7 @@
       {
         "box": {
           "appearance": 1,
-          "fontsize": 10.0,
-          "hint": "Offset Drive changes with the opposite change to Output.",
+          "fontsize": 9.0,
           "id": "ox-driveLink",
           "maxclass": "live.text",
           "numinlets": 1,
@@ -996,16 +998,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            71.0,
-            126.0,
-            40.0,
-            14.0
+            102.0,
+            128.0,
+            16.0,
+            15.0
           ],
           "saved_attribute_attributes": {
             "valueof": {
               "parameter_enum": [
-                "val1",
-                "val2"
+                "Off",
+                "On"
               ],
               "parameter_initial": [
                 0
@@ -1014,13 +1016,102 @@
               "parameter_longname": "Drive Link",
               "parameter_mmax": 1,
               "parameter_modmode": 0,
-              "parameter_shortname": "Link",
+              "parameter_shortname": "Compensate output",
               "parameter_type": 2
             }
           },
-          "text": "Link",
-          "texton": "Link",
-          "varname": "driveLink"
+          "text": "",
+          "texton": "",
+          "varname": "driveLink",
+          "annotation": "Offsets Pre Gain after the plug-in. For example, +6 dB of Pre Gain adds −6 dB after the plug-in. Post Gain stays independently adjustable.",
+          "annotation_name": "Compensate output"
+        }
+      },
+      {
+        "box": {
+          "id": "compensateOutputLabel",
+          "varname": "compensateOutputLabel",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            59.0,
+            136.0,
+            106.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            57.0,
+            145.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Offsets Pre Gain after the plug-in. For example, +6 dB of Pre Gain adds −6 dB after the plug-in. Post Gain stays independently adjustable.",
+          "annotation_name": "Compensate output",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "Compensate output"
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "compensationLabel",
+          "varname": "compensationLabel",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            450.0,
+            178.0,
+            106.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            482.0,
+            145.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Shows how much gain the compensation adds after the plug-in, in addition to Post Gain. It is the opposite of Pre Gain when enabled and 0 dB when disabled.",
+          "annotation_name": "Output compensation",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "Output compensation"
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "compensationReadout",
+          "varname": "compensationReadout",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            450.0,
+            196.0,
+            62.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            482.0,
+            128.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Shows how much gain the compensation adds after the plug-in, in addition to Post Gain. It is the opposite of Pre Gain when enabled and 0 dB when disabled.",
+          "annotation_name": "Output compensation",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "0.0 dB"
+          ]
         }
       },
       {
@@ -1046,7 +1137,6 @@
         "box": {
           "background": 1,
           "filename": "oxford-meter-peak.js",
-          "hint": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
           "id": "ox-inputMeter",
           "jsarguments": [
             0
@@ -1071,14 +1161,15 @@
             56.0,
             169.0
           ],
-          "varname": "inputMeter"
+          "varname": "inputMeter",
+          "annotation": "Shows the input signal's short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
+          "annotation_name": "Input meter"
         }
       },
       {
         "box": {
           "background": 1,
           "filename": "oxford-meter-peak.js",
-          "hint": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
           "id": "ox-outputMeter",
           "jsarguments": [
             1
@@ -1098,18 +1189,19 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            509.0,
+            589.0,
             0.0,
             120.0,
             169.0
           ],
-          "varname": "outputMeter"
+          "varname": "outputMeter",
+          "annotation": "Shows the output signal's short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
+          "annotation_name": "Output meter"
         }
       },
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input short-term LUFS",
           "id": "ox-match0",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.text",
@@ -1129,14 +1221,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            570.0,
+            650.0,
             43.0,
             54.0,
             20.0
           ],
           "text": "Gain match",
           "texton": "Gain match",
-          "varname": "match0"
+          "varname": "match0",
+          "annotation": "Adjusts Post Gain so the output matches the input's short-term LUFS.",
+          "annotation_name": "Gain match · LUFS"
         }
       },
       {
@@ -1161,7 +1255,6 @@
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input RMS",
           "id": "ox-match1",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.text",
@@ -1181,14 +1274,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            570.0,
+            650.0,
             85.0,
             54.0,
             20.0
           ],
           "text": "Gain match",
           "texton": "Gain match",
-          "varname": "match1"
+          "varname": "match1",
+          "annotation": "Adjusts Post Gain so the output matches the input's RMS level.",
+          "annotation_name": "Gain match · RMS"
         }
       },
       {
@@ -1213,7 +1308,6 @@
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input sample peak",
           "id": "ox-match2",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.text",
@@ -1233,14 +1327,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            570.0,
+            650.0,
             127.0,
             54.0,
             20.0
           ],
           "text": "Gain match",
           "texton": "Gain match",
-          "varname": "match2"
+          "varname": "match2",
+          "annotation": "Adjusts Post Gain so the output matches the input's sample peak level.",
+          "annotation_name": "Gain match · Peak"
         }
       },
       {
@@ -1449,7 +1545,18 @@
             195,
             22
           ],
-          "text": "vst~ 2 2 @prefer VST3 @autosave 0",
+          "text": "vst~ 2 2 @prefer VST3 @autosave 0 @parameter_enable 1",
+          "saved_object_attributes": {
+            "parameter_enable": 1
+          },
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Private plug-in host",
+              "parameter_shortname": "Host",
+              "parameter_type": 3,
+              "parameter_invisible": 2
+            }
+          },
           "numinlets": 2,
           "numoutlets": 8
         }
@@ -2274,7 +2381,7 @@
       ],
       "ox-driveLink": [
         "Drive Link",
-        "Link",
+        "Compensate output",
         0
       ],
       "ox-postOutput": [

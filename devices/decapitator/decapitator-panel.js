@@ -27,15 +27,8 @@ const dials = [
     {slot: 6, x: centerX + 204, y: 99, r: 17, label: "MIX", display: n => (100 * n).toFixed(1) + "%"},
     {slot: 10, x: centerX + 140, y: 48, r: 16, label: "OUTPUT", display: n => signedDb(24 * n - 24)},
 ];
-const styleDescriptions = [
-    "Ampex 350 tape drive preamp",
-    "Chandler/EMI TG Channel",
-    "Neve 1057 input channel",
-    "Thermionic Culture Vulture triode",
-    "Thermionic Culture Vulture pentode",
-];
 const styles = ["A", "E", "N", "T", "P"].map((label, i) => ({
-    label, tooltip: styleDescriptions[i], slot: 0, value: i / 4, x: centerX - 15 + (i - 2) * 43, y: 131, width: 30, height: 30,
+    label, slot: 0, value: i / 4, x: centerX - 15 + (i - 2) * 43, y: 131, width: 30, height: 30,
 }));
 const switches = [
     {label: "ON", caption: "PUNISH", slot: 2, x: centerX - 137, y: 27, width: 28, height: 28},
@@ -49,7 +42,6 @@ const buttonHeight = 19;
 let phase = "loading";
 let trimMode = 0;
 let drag = null;
-let hoveredStyle = null;
 
 function status(value) {
     const next = String(value);
@@ -197,16 +189,6 @@ function paint() {
     for(const x of [19,width-19]) for(const y of [11,158]) {
         disk(x,y,3,[0.28,0.29,0.28]); line(x-1.5,y+1.5,x+1.5,y-1.5,palette.recessed,1.2);
     }
-    if (hoveredStyle && !drag) {
-        const label = hoveredStyle.tooltip;
-        g.select_font_face("Arial", "normal", "normal");
-        g.set_font_size(9);
-        const w = g.text_measure(label)[0] + 16;
-        const x = Math.max(14, Math.min(width - w - 14, hoveredStyle.x + 15 - w / 2));
-        rounded(x, 110, w, 18, 3, palette.border);
-        rounded(x + 1, 111, w - 2, 16, 2, palette.recessed);
-        text(label, x + w / 2, 122, 9, palette.text, true, false);
-    }
     g.restore();
 }
 
@@ -224,17 +206,17 @@ function onclick(px, py, but, cmd, shift, caps, alt, ctrl, pointer) {
     const [x, y] = logical(px, py);
     const dial = dialAt(x, y);
     if (dial) {
-        drag = {slot: dial.slot, y, changed: false};
+        drag = {slot: dial.slot, y};
         return;
     }
     const style = styles.find(button => insideButton(button, x, y));
     if (style) {
-        if (edit(style.slot, style.value)) outlet(0, "editEnd");
+        edit(style.slot, style.value);
         return;
     }
     const toggle = switches.find(button => insideButton(button, x, y));
     if (toggle) {
-        if (edit(toggle.slot, positions[toggle.slot] >= 0.5 ? 0 : 1)) outlet(0, "editEnd");
+        edit(toggle.slot, positions[toggle.slot] >= 0.5 ? 0 : 1);
         return;
     }
     if (insideButton(openButton, x, y) || insideButton(driveEditorButton, x, y)) outlet(0, "action");
@@ -242,38 +224,21 @@ function onclick(px, py, but, cmd, shift, caps, alt, ctrl, pointer) {
 function ondrag(px, py, but, cmd, shift) {
     if (phase !== "ready" || !drag) return;
     if (!but) {
-        const changed = drag.changed;
         drag = null;
-        if (changed) outlet(0, "editEnd");
         return;
     }
     const [, y] = logical(px, py);
     const delta = (drag.y - y) / (shift ? 720 : 130);
     drag.y = y;
-    if (delta && edit(drag.slot, positions[drag.slot] + delta) && drag) drag.changed = true;
+    if (delta) edit(drag.slot, positions[drag.slot] + delta);
 }
 function ondblclick(px, py) {
     if (phase !== "ready") return;
     const [x, y] = logical(px, py);
     const dial = dialAt(x, y);
     drag = null;
-    if (dial && edit(dial.slot, defaults[dial.slot])) outlet(0, "editEnd");
+    if (dial) edit(dial.slot, defaults[dial.slot]);
 }
 onclick.local = 1;
 ondrag.local = 1;
 ondblclick.local = 1;
-
-function onidle(px, py) {
-    const [x, y] = logical(px, py);
-    const next = styles.find(control => insideButton(control, x, y)) || null;
-    if (next === hoveredStyle) return;
-    hoveredStyle = next;
-    mgraphics.redraw();
-}
-function onidleout() {
-    if (!hoveredStyle) return;
-    hoveredStyle = null;
-    mgraphics.redraw();
-}
-onidle.local = 1;
-onidleout.local = 1;

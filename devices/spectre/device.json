@@ -1,8 +1,12 @@
 {
-  "name": "Spectre Wrapper",
+  "name": "Spectre Wrapper V2",
   "product": {
     "name": "Spectre",
     "cid": "56535453705472737065637472650000",
+    "latencyParameters": [
+      "Quality",
+      "Bypass"
+    ],
     "parameters": [
       "LowShelf Frequency",
       "LowShelf Gain",
@@ -50,6 +54,7 @@
     "spectre-bands-v1.js": "devices/spectre/spectre-bands-v1.js",
     "spectre-meter-v1.js": "shared/meter-ui.js",
     "spectre-transparent.js": "shared/transparent.js",
-    "wrapper-warning-overlay.js": "shared/warning-overlay.js"
+    "wrapper-warning-overlay.js": "shared/warning-overlay.js",
+    "wrapper-compensation-label.js": "shared/compensation-label.js"
   }
 }

@@ -12,13 +12,13 @@
     "rect": [
       134.0,
       164.0,
-      818.0,
+      898.0,
       169.0
     ],
     "openrect": [
       0.0,
       0.0,
-      818.0,
+      898.0,
       169.0
     ],
     "openrectmode": 0,
@@ -30,7 +30,7 @@
       8.0
     ],
     "boxanimatetime": 500,
-    "devicewidth": 818.0,
+    "devicewidth": 898.0,
     "description": "Soundtoys Decapitator VST3 stereo wrapper",
     "digest": "Decapitator Wrapper",
     "tags": "VST3 Soundtoys Decapitator",
@@ -54,7 +54,7 @@
           "presentation_rect": [
             0,
             0,
-            818.0,
+            898.0,
             169.0
           ],
           "patching_rect": [
@@ -62,7 +62,291 @@
             1100,
             818.0,
             169.0
-          ]
+          ],
+          "annotation": "Shows whether the Decapitator VST3 is available. When its editor is open, click Close to return to the wrapper.",
+          "annotation_name": "Decapitator plug-in status"
+        }
+      },
+      {
+        "box": {
+          "id": "decap-param1",
+          "varname": "param1",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            20,
+            546,
+            100,
+            18
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Drive",
+              "parameter_shortname": "Drive",
+              "parameter_mmin": 0,
+              "parameter_mmax": 10,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0
+              ],
+              "parameter_type": 0,
+              "parameter_modmode": 0,
+              "parameter_unitstyle": 1
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            213,
+            70,
+            32,
+            28
+          ],
+          "jspainterfile": "oxford-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Adjusts the amount of saturation inside Decapitator.",
+          "annotation_name": "Drive"
+        }
+      },
+      {
+        "box": {
+          "id": "decap-param3",
+          "varname": "param3",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            20,
+            618,
+            100,
+            18
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Low Cut",
+              "parameter_shortname": "Low Cut",
+              "parameter_mmin": 20,
+              "parameter_mmax": 1000,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                20
+              ],
+              "parameter_type": 0,
+              "parameter_modmode": 0,
+              "parameter_unitstyle": 3
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            341,
+            80,
+            32,
+            28
+          ],
+          "jspainterfile": "oxford-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Filters low frequencies before saturation.",
+          "annotation_name": "Low Cut"
+        }
+      },
+      {
+        "box": {
+          "id": "decap-param4",
+          "varname": "param4",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            20,
+            654,
+            100,
+            18
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Tone",
+              "parameter_shortname": "Tone",
+              "parameter_mmin": -12,
+              "parameter_mmax": 12,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0
+              ],
+              "parameter_type": 0,
+              "parameter_modmode": 0,
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            400,
+            80,
+            32,
+            28
+          ],
+          "jspainterfile": "oxford-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Tilts the tone darker or brighter.",
+          "annotation_name": "Tone"
+        }
+      },
+      {
+        "box": {
+          "id": "decap-param5",
+          "varname": "param5",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            20,
+            690,
+            100,
+            18
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "High Cut",
+              "parameter_shortname": "High Cut",
+              "parameter_mmin": 1000,
+              "parameter_mmax": 20000,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                20000
+              ],
+              "parameter_type": 0,
+              "parameter_modmode": 0,
+              "parameter_unitstyle": 3
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            459,
+            80,
+            32,
+            28
+          ],
+          "jspainterfile": "oxford-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Filters high frequencies after saturation.",
+          "annotation_name": "High Cut"
+        }
+      },
+      {
+        "box": {
+          "id": "decap-param6",
+          "varname": "param6",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            210,
+            510,
+            100,
+            18
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Mix",
+              "parameter_shortname": "Mix",
+              "parameter_mmin": 0,
+              "parameter_mmax": 100,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                100
+              ],
+              "parameter_type": 0,
+              "parameter_modmode": 0,
+              "parameter_unitstyle": 5
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            604,
+            85,
+            32,
+            28
+          ],
+          "jspainterfile": "oxford-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Blends the original signal with the signal processed by Decapitator.",
+          "annotation_name": "Mix"
+        }
+      },
+      {
+        "box": {
+          "id": "decap-param10",
+          "varname": "param10",
+          "maxclass": "live.dial",
+          "patching_rect": [
+            210,
+            654,
+            100,
+            18
+          ],
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "parameter_enable": 1,
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "OutputTrim",
+              "parameter_shortname": "OutputTrim",
+              "parameter_mmin": -24,
+              "parameter_mmax": 0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0
+              ],
+              "parameter_type": 0,
+              "parameter_modmode": 0,
+              "parameter_unitstyle": 4
+            }
+          },
+          "presentation": 1,
+          "presentation_rect": [
+            540,
+            34,
+            32,
+            28
+          ],
+          "jspainterfile": "oxford-transparent.js",
+          "shownumber": 0,
+          "showname": 0,
+          "annotation": "Adjusts Decapitator's internal output trim. With AutoGain active, the plug-in can adjust this trim as Drive or Punish changes.",
+          "annotation_name": "Output Trim"
         }
       },
       {
@@ -85,12 +369,14 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            123.0,
+            163.0,
             0.0,
             506,
             169.0
           ],
-          "varname": "face"
+          "varname": "face",
+          "annotation": "Choose style A (Ampex 350 tape preamp), E (Chandler/EMI TG Channel), N (Neve 1057), T (Culture Vulture triode) or P (Culture Vulture pentode). Use Drive and Punish to shape saturation. Auto controls the internal output trim. Open plug-in shows the original editor.",
+          "annotation_name": "Decapitator"
         }
       },
       {
@@ -199,7 +485,6 @@
       {
         "box": {
           "appearance": 3,
-          "hint": "Gain before Decapitator",
           "id": "ox-preDrive",
           "maxclass": "live.dial",
           "numinlets": 1,
@@ -217,7 +502,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            59.0,
+            79.0,
             51.0,
             62.0,
             63.0
@@ -237,7 +522,9 @@
               "parameter_unitstyle": 4
             }
           },
-          "varname": "preDrive"
+          "varname": "preDrive",
+          "annotation": "Adjusts the level going into Decapitator. Increasing Pre Gain can drive the plug-in harder.",
+          "annotation_name": "Pre Gain"
         }
       },
       {
@@ -262,7 +549,6 @@
       {
         "box": {
           "appearance": 3,
-          "hint": "Gain after Decapitator",
           "id": "ox-postOutput",
           "maxclass": "live.dial",
           "numinlets": 1,
@@ -280,7 +566,7 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            632.0,
+            692.0,
             51.0,
             62.0,
             63.0
@@ -300,7 +586,9 @@
               "parameter_unitstyle": 4
             }
           },
-          "varname": "postOutput"
+          "varname": "postOutput",
+          "annotation": "Adjusts the level after Decapitator, independently of Output compensation.",
+          "annotation_name": "Post Gain"
         }
       },
       {
@@ -325,8 +613,7 @@
       {
         "box": {
           "appearance": 1,
-          "fontsize": 10.0,
-          "hint": "Offset Drive changes with the opposite change to Output.",
+          "fontsize": 9.0,
           "id": "ox-driveLink",
           "maxclass": "live.text",
           "numinlets": 1,
@@ -344,16 +631,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            71.0,
-            126.0,
-            40.0,
-            14.0
+            102.0,
+            128.0,
+            16.0,
+            15.0
           ],
           "saved_attribute_attributes": {
             "valueof": {
               "parameter_enum": [
-                "val1",
-                "val2"
+                "Off",
+                "On"
               ],
               "parameter_initial": [
                 0
@@ -362,13 +649,102 @@
               "parameter_longname": "Drive Link",
               "parameter_mmax": 1,
               "parameter_modmode": 0,
-              "parameter_shortname": "Link",
+              "parameter_shortname": "Compensate output",
               "parameter_type": 2
             }
           },
-          "text": "Link",
-          "texton": "Link",
-          "varname": "driveLink"
+          "text": "",
+          "texton": "",
+          "varname": "driveLink",
+          "annotation": "Offsets Pre Gain after the plug-in. For example, +6 dB of Pre Gain adds −6 dB after the plug-in. Post Gain stays independently adjustable.",
+          "annotation_name": "Compensate output"
+        }
+      },
+      {
+        "box": {
+          "id": "compensateOutputLabel",
+          "varname": "compensateOutputLabel",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            59.0,
+            136.0,
+            106.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            57.0,
+            145.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Offsets Pre Gain after the plug-in. For example, +6 dB of Pre Gain adds −6 dB after the plug-in. Post Gain stays independently adjustable.",
+          "annotation_name": "Compensate output",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "Compensate output"
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "compensationLabel",
+          "varname": "compensationLabel",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            450.0,
+            178.0,
+            106.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            670.0,
+            145.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Shows how much gain the compensation adds after the plug-in, in addition to Post Gain. It is the opposite of Pre Gain when enabled and 0 dB when disabled.",
+          "annotation_name": "Output compensation",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "Output compensation"
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "compensationReadout",
+          "varname": "compensationReadout",
+          "maxclass": "jsui",
+          "numinlets": 1,
+          "numoutlets": 0,
+          "patching_rect": [
+            450.0,
+            196.0,
+            62.0,
+            16.0
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            670.0,
+            128.0,
+            106.0,
+            16.0
+          ],
+          "annotation": "Shows how much gain the compensation adds after the plug-in, in addition to Post Gain. It is the opposite of Pre Gain when enabled and 0 dB when disabled.",
+          "annotation_name": "Output compensation",
+          "outlettype": [],
+          "filename": "wrapper-compensation-label.js",
+          "jsarguments": [
+            "0.0 dB"
+          ]
         }
       },
       {
@@ -394,7 +770,6 @@
         "box": {
           "background": 1,
           "filename": "oxford-meter-peak.js",
-          "hint": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
           "id": "ox-inputMeter",
           "jsarguments": [
             0
@@ -419,14 +794,15 @@
             56.0,
             169.0
           ],
-          "varname": "inputMeter"
+          "varname": "inputMeter",
+          "annotation": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
+          "annotation_name": "Input meter"
         }
       },
       {
         "box": {
           "background": 1,
           "filename": "oxford-meter-peak.js",
-          "hint": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
           "id": "ox-outputMeter",
           "jsarguments": [
             1
@@ -446,18 +822,19 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            697.0,
+            777.0,
             0.0,
             120.0,
             169.0
           ],
-          "varname": "outputMeter"
+          "varname": "outputMeter",
+          "annotation": "Short-term LUFS, RMS and sample peak (dBFS). Click to reset both meters.",
+          "annotation_name": "Output meter"
         }
       },
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input short-term LUFS",
           "id": "ox-match0",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.text",
@@ -477,14 +854,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            758.0,
+            838.0,
             43.0,
             54.0,
             20.0
           ],
           "text": "Gain match",
           "texton": "Gain match",
-          "varname": "match0"
+          "varname": "match0",
+          "annotation": "Match output to input short-term LUFS",
+          "annotation_name": "Gain match · Short-term LUFS"
         }
       },
       {
@@ -509,7 +888,6 @@
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input RMS",
           "id": "ox-match1",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.text",
@@ -529,14 +907,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            758.0,
+            838.0,
             85.0,
             54.0,
             20.0
           ],
           "text": "Gain match",
           "texton": "Gain match",
-          "varname": "match1"
+          "varname": "match1",
+          "annotation": "Match output to input RMS",
+          "annotation_name": "Gain match · RMS"
         }
       },
       {
@@ -561,7 +941,6 @@
       {
         "box": {
           "fontsize": 9.0,
-          "hint": "Match output to input sample peak",
           "id": "ox-match2",
           "jspainterfile": "oxford-transparent.js",
           "maxclass": "live.text",
@@ -581,14 +960,16 @@
           ],
           "presentation": 1,
           "presentation_rect": [
-            758.0,
+            838.0,
             127.0,
             54.0,
             20.0
           ],
           "text": "Gain match",
           "texton": "Gain match",
-          "varname": "match2"
+          "varname": "match2",
+          "annotation": "Match output to input sample peak",
+          "annotation_name": "Gain match · Sample peak"
         }
       },
       {
@@ -814,7 +1195,9 @@
             "N",
             "T",
             "P"
-          ]
+          ],
+          "annotation": "Selects the circuit Decapitator models. Each style has its own saturation character.",
+          "annotation_name": "Style"
         }
       },
       {
@@ -829,41 +1212,6 @@
             80,
             18
           ]
-        }
-      },
-      {
-        "box": {
-          "id": "decap-param1",
-          "varname": "param1",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            20,
-            546,
-            100,
-            18
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Drive",
-              "parameter_shortname": "Drive",
-              "parameter_mmin": 0,
-              "parameter_mmax": 10,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0
-              ],
-              "parameter_type": 0,
-              "parameter_modmode": 0,
-              "parameter_unitstyle": 1
-            }
-          }
         }
       },
       {
@@ -921,7 +1269,9 @@
           "items": [
             "Off",
             "On"
-          ]
+          ],
+          "annotation": "Adds 20 dB of drive for heavier saturation.",
+          "annotation_name": "Punish"
         }
       },
       {
@@ -940,41 +1290,6 @@
       },
       {
         "box": {
-          "id": "decap-param3",
-          "varname": "param3",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            20,
-            618,
-            100,
-            18
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Low Cut",
-              "parameter_shortname": "Low Cut",
-              "parameter_mmin": 20,
-              "parameter_mmax": 1000,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                20
-              ],
-              "parameter_type": 0,
-              "parameter_modmode": 0,
-              "parameter_unitstyle": 3
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "decap-param3ctl",
           "varname": "param3ctl",
           "maxclass": "newobj",
@@ -985,41 +1300,6 @@
             80,
             18
           ]
-        }
-      },
-      {
-        "box": {
-          "id": "decap-param4",
-          "varname": "param4",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            20,
-            654,
-            100,
-            18
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Tone",
-              "parameter_shortname": "Tone",
-              "parameter_mmin": -12,
-              "parameter_mmax": 12,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0
-              ],
-              "parameter_type": 0,
-              "parameter_modmode": 0,
-              "parameter_unitstyle": 4
-            }
-          }
         }
       },
       {
@@ -1038,41 +1318,6 @@
       },
       {
         "box": {
-          "id": "decap-param5",
-          "varname": "param5",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            20,
-            690,
-            100,
-            18
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "High Cut",
-              "parameter_shortname": "High Cut",
-              "parameter_mmin": 1000,
-              "parameter_mmax": 20000,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                20000
-              ],
-              "parameter_type": 0,
-              "parameter_modmode": 0,
-              "parameter_unitstyle": 3
-            }
-          }
-        }
-      },
-      {
-        "box": {
           "id": "decap-param5ctl",
           "varname": "param5ctl",
           "maxclass": "newobj",
@@ -1083,41 +1328,6 @@
             80,
             18
           ]
-        }
-      },
-      {
-        "box": {
-          "id": "decap-param6",
-          "varname": "param6",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            210,
-            510,
-            100,
-            18
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "Mix",
-              "parameter_shortname": "Mix",
-              "parameter_mmin": 0,
-              "parameter_mmax": 100,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                100
-              ],
-              "parameter_type": 0,
-              "parameter_modmode": 0,
-              "parameter_unitstyle": 5
-            }
-          }
         }
       },
       {
@@ -1175,7 +1385,9 @@
           "items": [
             "Off",
             "On"
-          ]
+          ],
+          "annotation": "Lets Decapitator compensate its internal output level as Drive or Punish changes.",
+          "annotation_name": "AutoGain"
         }
       },
       {
@@ -1233,7 +1445,9 @@
           "items": [
             "Off",
             "On"
-          ]
+          ],
+          "annotation": "Adds a low-frequency boost around the Low Cut frequency.",
+          "annotation_name": "Thump"
         }
       },
       {
@@ -1291,7 +1505,9 @@
           "items": [
             "Gentle",
             "Steep"
-          ]
+          ],
+          "annotation": "Switches the High Cut filter between its gentle and steep slopes.",
+          "annotation_name": "High Cut Slope"
         }
       },
       {
@@ -1306,41 +1522,6 @@
             80,
             18
           ]
-        }
-      },
-      {
-        "box": {
-          "id": "decap-param10",
-          "varname": "param10",
-          "maxclass": "live.numbox",
-          "patching_rect": [
-            210,
-            654,
-            100,
-            18
-          ],
-          "numinlets": 1,
-          "numoutlets": 2,
-          "outlettype": [
-            "",
-            "float"
-          ],
-          "parameter_enable": 1,
-          "saved_attribute_attributes": {
-            "valueof": {
-              "parameter_longname": "OutputTrim",
-              "parameter_shortname": "OutputTrim",
-              "parameter_mmin": -24,
-              "parameter_mmax": 0,
-              "parameter_initial_enable": 1,
-              "parameter_initial": [
-                0
-              ],
-              "parameter_type": 0,
-              "parameter_modmode": 0,
-              "parameter_unitstyle": 4
-            }
-          }
         }
       },
       {
@@ -1368,7 +1549,18 @@
             195,
             22
           ],
-          "text": "vst~ 2 2 @prefer VST3 @autosave 0",
+          "text": "vst~ 2 2 @prefer VST3 @autosave 0 @parameter_enable 1",
+          "saved_object_attributes": {
+            "parameter_enable": 1
+          },
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Private plug-in host",
+              "parameter_shortname": "Host",
+              "parameter_type": 3,
+              "parameter_invisible": 2
+            }
+          },
           "numinlets": 2,
           "numoutlets": 8
         }
@@ -1446,6 +1638,43 @@
             22
           ],
           "text": "refreshLatency"
+        }
+      },
+      {
+        "box": {
+          "id": "trimOrigin",
+          "maxclass": "live.numbox",
+          "numinlets": 1,
+          "numoutlets": 2,
+          "outlettype": [
+            "",
+            "float"
+          ],
+          "patching_rect": [
+            630,
+            655,
+            70,
+            20
+          ],
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_invisible": 3,
+              "parameter_longname": "Output compensation source",
+              "parameter_modmode": 0,
+              "parameter_shortname": "Trim source",
+              "parameter_type": 0,
+              "parameter_mmin": -1.0,
+              "parameter_mmax": 4.0,
+              "parameter_initial_enable": 1,
+              "parameter_initial": [
+                0
+              ],
+              "parameter_visible_undoable": 0
+            }
+          },
+          "varname": "trimOrigin",
+          "parameter_enable": 1,
+          "parameter_mappable": 0
         }
       }
     ],
@@ -2277,7 +2506,7 @@
       ],
       "ox-driveLink": [
         "Drive Link",
-        "Link",
+        "Compensate output",
         0
       ],
       "ox-postOutput": [
@@ -2394,6 +2623,11 @@
       "decap-param10": [
         "OutputTrim",
         "OutputTrim",
+        0
+      ],
+      "trimOrigin": [
+        "Output compensation source",
+        "Trim source",
         0
       ]
     },

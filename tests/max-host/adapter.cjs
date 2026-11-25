@@ -19,7 +19,9 @@ class File {
     readbytes(n) { return files.get(this.key).slice(0,n); }
     close() {}
 }
-const product = {id: 17, cid:"0123456789ABCDEF0123456789ABCDEF", name:"Fixture", parameters:["Gain","Quality"]};
+const product = {id: 17, cid:"0123456789ABCDEF0123456789ABCDEF", name:"Fixture", parameters:["Gain","Quality"],
+    latencyParameters:["Quality"]};
+let pluginLatency = 60;
 let storedValue = 0.7, readParameter = 0;
 let windowVisible = false;
 let installed = true, wrong = false, missingParameter = false, corruptRead = false;
@@ -34,7 +36,7 @@ const globals = {Task, File, product, post(){}, patcher:{getnamed(){return {geta
             context.inlet = 2;
             context.list(-9, ...(windowVisible ? [-200,100,550,600] : [0,0,500,200]));
             context.inlet = 0;
-        } else if (op === "get") context.parameterChanged(args[0], args[0] === -8 ? (wrong ? 99 : 17) : args[0] === -10 ? 60 : readParameter);
+        } else if (op === "get") context.parameterChanged(args[0], args[0] === -8 ? (wrong ? 99 : 17) : args[0] === -10 ? pluginLatency : readParameter);
         if (op === "params") {
             context.inlet = 1;
             for (const name of missingParameter ? ["Gain"] : ["Quality","Gain"]) { context.messagename=name;context.anything(); }
@@ -57,17 +59,50 @@ let context = instantiate();
 function drain(){ while(jobs.length) jobs.shift().run(); }
 function reset(){events.length=0;}
 function was(out,op,...args) {return events.some(e=>JSON.stringify(e)===JSON.stringify([out,op,...args]));}
-for(const n of [1,2,3,256,4000]){
+for(const n of [1,2,3,256,4000,300000]){
     const raw=Array.from({length:n},(_,i)=>(i*13)%256);
     const encoded=context.encode(raw);assert.equal(encoded,Buffer.from(raw).toString("base64"));
     assert.deepEqual(Array.from(context.parsePreset(context.legacyPreset(context.decode(encoded))).component),raw);
 }
+const largeBank=context.legacyPreset(Array.from({length:300000},(_,i)=>i % 251));
+context.writeFile("big",largeBank);
+assert.equal(context.parsePreset(context.readFile("big")).component.length,300000);
 const invalid=Array.from(context.legacyPreset([1]));invalid[40]=255;
 assert.throws(()=>context.parsePreset(invalid));
 context.load("AQID");drain();assert.ok(was(1,"ready") && was(3,"wet",1));assert.ok(was(1,"latency",60));
 reset();context.param(0,.4);assert.ok(was(0,[2,.4]));
+assert.ok(!was(0, "get", -10));
+context.param(0, .5);
+context.param(0, .6);
+assert.equal(jobs.length, 1);
+pluginLatency = 48; // A future plug-in version adds lookahead to an existing control.
+drain();
+assert.ok(was(1, "latency", 48));
+pluginLatency = 60;
+context.refreshLatency();
+drain();
+reset();
+context.param(1, 1);
+assert.ok(was(0, "get", -10) && !was(1, "latency", 60));
+pluginLatency = 64; // The processor applies Quality on the next audio block.
+drain();
+assert.ok(was(1, "latency", 64));
+reset();
+pluginLatency = 0;
+context.parameterChanged(1, 0); // A mode change from the vendor editor.
+assert.ok(was(1, "latency", 0), "Publish the new delay before deferred work runs");
+drain();
+assert.equal(events.filter(e => e[1] === "latency").length, 1);
+reset();
+pluginLatency = 60;
+context.refreshLatency(); // DSP rate change.
+assert.ok(was(1, "latency", 60));
+drain();
 storedValue=.25;context.load("AQID");drain();assert.ok(was(1,"ready"));
-context.snapshot();assert.ok(was(1,"plugstate",Buffer.from([50,60,70]).toString("base64")));
+context.snapshot();assert.ok(was(1,"plugstate","preset1_"+context.encode(context.legacyPreset([50,60,70]))));
+wrong=true;reset();context.snapshot();
+assert.ok(events.some(e=>e[1]==="stateerror") && !events.some(e=>e[1]==="plugstate"));
+wrong=false;
 for(const failure of ["absent","wrong","missing parameter","corrupt preset","unconfirmed restore"]){
     reset();installed=failure!=="absent";wrong=failure==="wrong";missingParameter=failure==="missing parameter";corruptRead=failure==="unconfirmed restore";
     context.load(failure==="corrupt preset"?"bad!":"AQID");drain();context.snapshot();
@@ -112,6 +147,7 @@ const decapitator = {
     restoreProbe: 6,
     autoGain: {drive: 1, punish: 2, enabled: 7, trim: 10}
 };
+let storedTrimSource = 0;
 const pluginNames = ["Bypass", ...decapitator.parameters];
 const saved = [0, 0.25, 0.5, 0, 0, 0, 1, 0.9, 1, 0, 0, 0.67];
 const working = [...saved];
@@ -124,6 +160,7 @@ context = instantiate({
     product: decapitator,
     outlet(out, op, ...args) {
         events.push([out, op, ...args]);
+        if (out === 1 && op === "ready") context.restoredTrimSource(storedTrimSource);
         if (out !== 0) return;
         if (Array.isArray(op)) {
             const [index, value] = op;
@@ -184,4 +221,48 @@ context.param(decapitator.autoGain.enabled, 0);
 reset();
 context.param(decapitator.autoGain.enabled, 1);
 assert.ok(was(0, [enabled, 1]) && was(1, "autoTrim", 1), "Turning AutoGain on can change a known trim");
-console.log("Max host adapter and saved-state checks passed");
+for (const enabledAtSave of [0,1]) {
+    saved[enabled-1] = enabledAtSave;
+    storedTrimSource = 1.8;
+    reset(); context.load(preset); drain();
+    assert.equal(events.filter(e=>e[1]==="autoTrim").at(-1)[2],enabledAtSave ? 1 : 2);
+}
+let located = false, available = true;
+const discovery = [];
+const nativeFixture = {
+    product:{...decapitator, sdkHost:true},
+    patcher:{getnamed(name) {
+        assert.equal(name,"maxLookup");
+        return {
+            getattr:()=>located ? ["C74_VST3:/Decapitator",17] : [],
+            message(op,...args) {
+                discovery.push([op,...args]);
+                if(op==="plug_vst3")located=available;
+                if(op==="drop")located=false;
+            }
+        };
+    }},
+    outlet(out, op, ...args) {
+        events.push([out,op,...args]);
+        if(out===0 && op==="loadstate"){
+            assert.equal(located,true,"Keep Max's module loaded until the SDK has claimed it");
+            context.nativeReady();
+        }
+        if(out===0 && op==="get")context.nativeValue(args[0],args[0]===-10 ? 110 : .5);
+    }
+};
+context = instantiate(nativeFixture);
+reset();context.load(preset);drain();
+assert.ok(was(1,"ready") && was(3,"wet",1) && was(1,"latency",110));
+assert.equal(located,true);
+assert.deepEqual(discovery,[["plug_vst3","Decapitator"],["disable",1]]);
+discovery.length=0;
+context=instantiate(nativeFixture);
+reset();context.load(preset);drain();
+assert.ok(was(1,"ready"));
+assert.deepEqual(discovery,[["disable",1]],"Reuse the matching Max lookup when a device opens");
+reset();available=false;context.load(preset);drain();
+assert.ok(was(3,"wet",0) && !was(0,"loadstate",preset));
+reset();available=true;context.load(preset);drain();
+assert.ok(was(0,"loadstate",preset),"Retry hands the original preset to the rediscovered processor");
+console.log("Max host adapter, SDK hand-off, Retry and saved-state checks passed");

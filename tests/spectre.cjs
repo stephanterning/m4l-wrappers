@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const base = process.argv[2] || path.join(__dirname,'../dist/Spectre Wrapper.amxd');
+const base = process.argv[2] || path.join(__dirname,'../dist/v2/Spectre Wrapper V2.amxd');
 const b = fs.readFileSync(base), archive = b.subarray(32);
 assert.equal(b.readUInt32LE(28),archive.length);
 const entries = new Map();
@@ -25,7 +25,7 @@ for(const [type,entry] of chunks(table[1])) {
 }
 const patch=JSON.parse(entries.get(path.basename(base)).toString().replace(/\0+$/,'')).patcher;
 const boxes=Object.fromEntries(patch.boxes.map(({box:b})=>[b.varname,b]));
-const ids=new Set(Object.values(boxes).map(b=>b.id));
+const ids=new Set(patch.boxes.map(({box})=>box.id));
 for(const {patchline:l} of patch.lines) assert(ids.has(l.source[0]) && ids.has(l.destination[0]));
 const assets=[...entries.keys()];
 assert(boxes.maxPlugin.text.startsWith('vst~ 2 2 @prefer VST3'));
@@ -49,7 +49,7 @@ for(const [key,b] of Object.entries(boxes)) {
         }
     });
 }
-const patcher={bringtofront:o=>assert.equal(o,objects.get("warningOverlay")),getnamed:n=>objects.get(n),setattr:(k,v)=>latency=v};
+const patcher={bringtofront:o=>assert.ok([...objects.values()].includes(o)),getnamed:n=>objects.get(n),getattr:k=>latency,setattr:(k,v)=>latency=v};
 let clock=0;
 const timers=new Map();
 class Task {
@@ -77,6 +77,22 @@ ctx.load();
 assert.deepEqual(commands.at(-1),['load','AQI=']);
 values.bankState=['none'];
 ctx.initialized();ctx.ready();
+// The same label position maps to different persistent parameters on each inspector page.
+const inspector = vm.createContext({mgraphics:{init(){},redraw(){}},
+    outlet:(_, selector, base)=>ctx[selector](base)});
+vm.runInContext(entries.get(boxes.face.filename).toString(),inspector);
+for (const [name, box] of Object.entries(boxes)) objects.get(name).hidden = Boolean(box.hidden);
+inspector.status("ready");
+for (const [global, band, expected] of [[false,2,12],[false,0,0],[true,0,30],[false,4,24]]) {
+    inspector.setView(global,band);
+    for (const [name,box] of Object.entries(boxes)) {
+        if (!name.startsWith("param") || !box.presentation) continue;
+        const index = Number(name.slice(5));
+        assert.equal(objects.get(name).hidden, index < expected || index >= expected+3);
+    }
+}
+inspector.status("editor");
+for (const index of [24,25,26]) assert.equal(objects.get("param"+index).hidden,true);
 const initial=commands.filter(c=>c[0]==='param').slice(-39);
 assert.equal(initial.length,39);
 assert.deepEqual(initial[34],['param',34,.5]);assert.deepEqual(initial[35],['param',35,1]);
@@ -86,16 +102,17 @@ for(let i=0;i<39;i++) {
     ctx.param(i,raw);
     const last=commands.filter(c=>c[0]==='param').at(-1);
     assert.equal(last[1],i);assert(Math.abs(last[2]-raw)<1e-12);
-    ctx.edited(i,0);assert.equal(values['param'+i],d.parameter_mmin);
+    vm.runInContext("editorShowing=true",ctx); ctx.edited(i,0); vm.runInContext("editorShowing=false",ctx);assert.equal(values['param'+i],d.parameter_mmin);
 }
-ctx.outputTrim(-12);ctx.driveLinkChanged(1);ctx.drive(24);ctx.drive(6);
-assert.equal(values.postOutput,-18);
-ctx.setPlaying(true);vm.runInContext('matchAfter=0',ctx);
-ctx.levels(1,1,1,-13,-8,-1,-12.95,-8.1,-.75);
+objects.get("postOutput").message("float",-12);ctx.driveLinkChanged(1);ctx.drive(24);ctx.drive(6);
+assert.equal(values.postOutput,-12);
+assert.deepEqual(commands.at(-1),["output",-18]);
+ctx.setPlaying(true);
+ctx.levels(1,1,1,-13,-8,-1,-12.95,-8.1,-.75,vm.runInContext('matchRevision',ctx));
 assert.deepEqual(ui.at(-1),['outputMeter','available',0,0,1]);
-ctx.gainmatch(2);assert.equal(values.postOutput,-18.25);assert.deepEqual(commands.at(-1),['metering',5]);
+ctx.gainmatch(2);assert.equal(values.postOutput,-12.25);assert.deepEqual(commands.at(-1),['metering',5]);
 ctx.latency(64);assert.equal(latency,64);
-console.log('Frozen archive, portable DSP, outer panel, all 39 parameter round trips, menu, relative Link, Gain Match threshold/reset and latency notification passed.');
+console.log('Frozen archive, portable DSP, outer panel, all 39 parameter round trips, menu, independent Post Gain and output compensation, Gain Match threshold/reset and latency notification passed.');
 // Exercise the same warning queue used by multiple devices in one Live Set.
 class Dictionary {
     constructor(){this.values=new Map();}
@@ -117,7 +134,7 @@ for (const extraTracks of [false, true]) {
     const stored = values.bankState;
     ctx.plugstate('late-host-snapshot');
     assert.equal(values.bankState, stored);
-    if (extraTracks) vm.runInContext('queue.set("d778",JSON.stringify(["MIX PRE-MASTER",""])); queue.set("d779",JSON.stringify(["Bass",""]))',ctx);
+    if (extraTracks) vm.runInContext('queue.set("d778",JSON.stringify([pluginName,"MIX PRE-MASTER",""])); queue.set("d779",JSON.stringify([pluginName,"Bass",""]))',ctx);
     vm.runInContext('queue.set("last",String(Date.now()-1500))',ctx);
     ctx.flush();
     const names = extraTracks ? 'Bass\nMIX PRE-MASTER' : 'Bass';
@@ -131,12 +148,16 @@ ctx=vm.createContext({patcher,Task,LiveAPI:trackAPI,Dict:Dictionary,Date:{now:()
     outlet:(n,...args)=>commands.push(args)});
 vm.runInContext(boxes.ctrl.code,ctx);
 ctx.load(); advance(15000);
-vm.runInContext('queue.set("d778",JSON.stringify(["Lead","Cannot map the required VST3 parameter: Effect (expected ID 1)."]))',ctx);
+vm.runInContext('queue.set("d778",JSON.stringify([pluginName,"Lead","Cannot map the required VST3 parameter: Effect (expected ID 1)."]))',ctx);
+vm.runInContext('queue.set("d780",JSON.stringify(["Soundtoys Decapitator","Drums","Could not load the VST3."]))',ctx);
+const warningsBefore=commands.filter(msg=>msg[0]==='symbol').length;
 advance(650);
+assert.equal(commands.filter(msg=>msg[0]==='symbol').length,warningsBefore+1);
 const loadWarning=commands.at(-1)[1];
 assert(loadWarning.includes('An error occurred while loading Wavesfactory Spectre (VST3).'));
 assert(loadWarning.includes('The VST3 host did not respond.\n\nTracks:\nBass'));
 assert(loadWarning.includes('Effect (expected ID 1).\n\nTracks:\nLead'));
+assert(loadWarning.includes('Soundtoys Decapitator (VST3).\nCould not load the VST3.\n\nTracks:\nDrums'));
 assert(!loadWarning.includes('was not found'));
 const overlay=objects.get('warningOverlay');
 assert.equal(overlay.hidden,false);
@@ -176,7 +197,22 @@ if (boxes.maxPlugin) {
     click.status('editor');
     click.onclick(1,1,1); // The input meter is also a close target.
     assert.deepEqual(commands.at(-1), ['closePlugin']);
+    ctx.syncGains();
+    ctx.setPlaying(true);
+    const revision = vm.runInContext('matchRevision',ctx);
+    const epoch = vm.runInContext('epoch',ctx);
+    const before = values.postOutput;
+    const report = rev => ctx.levels(epoch,1,1,-18,-18,-18,-12,-12,-12,rev);
+    report(revision);
+    for (const row of [0,1,2]) ctx.gainmatch(row);
+    assert.equal(values.postOutput,before);
     ctx.editorWindow(0);
+    report(revision); // A settled packet queued before the editor closed.
+    for (const row of [0,1,2]) ctx.gainmatch(row);
+    assert.equal(values.postOutput,before);
+    report(vm.runInContext('matchRevision',ctx));
+    ctx.gainmatch(0);
+    assert.equal(values.postOutput,before-6);
     assert.equal(lastStatus(), 'ready');
     assert.equal(overlay.hidden, true);
     assert.equal(overlay.ignoreclick, true);

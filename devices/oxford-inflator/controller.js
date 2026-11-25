@@ -1,5 +1,4 @@
 const pointerControls = ["preDrive", "postOutput", "driveLink", "input", "amount", "curve", "output", "effectIn", "split", "clip", "editorButton"];
-const warningNamespace = "oxford_single_host_missing_";
 const pluginName = "Sonnox Oxford Inflator";
 inlets=1;outlets=2;
 const patch=this.patcher,names=["input","amount","curve","output","effectIn","split","clip","hostBypass"];
@@ -14,6 +13,7 @@ function storedState(){
     return String(data||"").replace(/^symbol[, ]/,"");
 }
 function plugstate(data){
+    captureErrorShown = false;
     if(phase!=="ready")return;
     const token=String(data),storage=patch.getnamed("bankState");
     if(storedState()!==token)storage.message("symbol",token);
@@ -25,16 +25,19 @@ function update(i,v){panel().message("value",i,v);}
 function control(i,value){
     const v=Number(value);update(i,v);
     if(phase==="ready"){
-        outlet(0,"param",i,(v-low[i])/(high[i]-low[i]));
-        snapshotSoon();
+        const normalized=(v-low[i])/(high[i]-low[i]);
+        noteParameter(i,normalized);
+        outlet(0,"param",i,normalized);
     }
 }
 function synced(){for(let i=0;i<8;i++)control(i,Number(patch.getnamed(names[i]).getvalueof()));}
-function ready(){loadTimeout.cancel();clear();status("ready");synced();}
+function ready(){loadTimeout.cancel();clear();status("ready");synced();if(storedState()==="none"||!storedState())outlet(0,"snapshot");}
 function edited(i,v){
     if(phase!=="ready"||i<0||i>=8)return;
     let value=low[i]+Math.max(0,Math.min(1,v))*(high[i]-low[i]);value=Math.round(value*(i<4?100000:1))/(i<4?100000:1);
-    patch.getnamed(names[i]).message("set",value);update(i,value);snapshotSoon();
+    const dial=patch.getnamed(names[i]);
+    if(editorShowing && Math.abs(Number(dial.getvalueof())-value)>(high[i]-low[i])*1e-6)dial.message("set",value);
+    noteParameter(i,v);update(i,value);if(editorShowing)snapshotSoon();
 }
 function initialized(){syncGains();watchTransport();if(phase==="cold")load();else if(phase==="ready")synced();}
 function load(){

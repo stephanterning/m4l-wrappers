@@ -24,6 +24,7 @@ peakdb(x) { return 20 * log10(max(1e-12,x)); }
 
 Param metering(0);
 Param dsprun(0);
+Param revision(0);
 Param wet(0);
 Param output(0);
 Data slices(30, 6);
@@ -34,6 +35,8 @@ History outputR_s1(0); History outputR_s2(0); History outputR_h1(0); History out
 History clearFilters(1);
 History previousEpoch(-1);
 History previousRun(-1);
+History previousRevision(-1);
+History reportRevision(-1);
 History previousOutput(0);
 History settledFrames(0);
 History reportEpoch(-1);
@@ -63,7 +66,8 @@ clear = dspStarted || epoch != previousEpoch;
 previousEpoch = epoch;
 active = metering - 2*epoch;
 required = 30*length + floor(0.005*samplerate + 0.5);
-settledFrames = wet && !dspStarted && previousOutput == output ? min(required, settledFrames+1) : 0;
+settledFrames = wet && !clear && previousRevision == revision && previousOutput == output ? min(required, settledFrames+1) : 0;
+previousRevision = revision;
 previousOutput = output;
 tick = 0;
 if (clear) {
@@ -110,6 +114,7 @@ if (active) {
         // Max may collect this report several milliseconds after the tick. The
         // flags must describe the same window as the six captured meter readings.
         reportEpoch = epoch;
+        reportRevision = revision;
         reportValid = count == 30;
         reportSettled = settledFrames >= required;
         tick = 1;
@@ -118,3 +123,4 @@ if (active) {
 out1 = tick; out2 = reportEpoch; out3 = reportValid; out4 = reportSettled;
 out5 = inLufs; out6 = inRms; out7 = inDbPeak;
 out8 = postLufs; out9 = postRms; out10 = postDbPeak;
+out11 = reportRevision;

@@ -9,19 +9,44 @@ permissions:
 
 jobs:
   package:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: portable-comparison
+          - os: macos-15
+            artifact: macos-v2
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Package all three portable devices
+      - uses: actions/checkout@v4
+        if: runner.os == 'macOS'
+        with:
+          repository: steinbergmedia/vst3sdk
+          ref: 3cdf9ca5d1f5b1b21e0a86832aa4abe55607bd96
+          path: deps/vst3sdk
+          persist-credentials: false
+      - name: Fetch VST3 host sources
+        if: runner.os == 'macOS'
+        run: git -C deps/vst3sdk submodule update --init --depth 1 pluginterfaces base public.sdk
+      - uses: actions/checkout@v4
+        if: runner.os == 'macOS'
+        with:
+          repository: Cycling74/max-sdk-base
+          ref: c03a2922a2a8ff149165a1e2ea134e9321d6e202
+          path: deps/max-sdk-base
+          persist-credentials: false
+      - name: Package the three devices
         run: python3 build.py
       - name: Check release compatibility, routing, resources and controllers
         run: |
-          python3 tests/package.py dist
+          python3 tests/package.py dist/v2
           node tests/max-host/adapter.cjs
+          node tests/decapitator.cjs
           node tests/oxford.cjs
           node tests/spectre.cjs
       - uses: actions/upload-artifact@v4
         with:
-          name: m4l-wrappers
-          path: dist/*.amxd
+          name: m4l-wrappers-${{ matrix.artifact }}
+          path: dist/v2/*.amxd
           if-no-files-found: error

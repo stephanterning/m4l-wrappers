@@ -1,8 +1,12 @@
 {
-  "name": "Oxford Inflator Wrapper",
+  "name": "Oxford Inflator Wrapper V2",
   "product": {
     "name": "Oxford Inflator",
     "cid": "5653544F494E546F78666F726420696E",
+    "latencyParameters": [
+      "Band Split",
+      "Bypass"
+    ],
     "parameters": [
       "Input Gain",
       "Effect",
@@ -25,6 +29,7 @@
     "oxford-transparent.js": "shared/transparent.js",
     "oxford-meter-peak.js": "shared/meter-ui.js",
     "oxford-panel-v1.js": "devices/oxford-inflator/oxford-panel-v1.js",
-    "wrapper-warning-overlay.js": "shared/warning-overlay.js"
+    "wrapper-warning-overlay.js": "shared/warning-overlay.js",
+    "wrapper-compensation-label.js": "shared/compensation-label.js"
   }
 }

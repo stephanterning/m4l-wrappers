@@ -143,6 +143,11 @@ def check(events, requested_vector):
             reference = [db - 220 for db in expected]
         errors.extend(abs(a-b) for a, b in zip(rows[-1][4:], reference))
     assert max(errors) < .005, ("level mismatch (dB)", max(errors), rate)
+    edit = [e for e in readings if e[1] == "plugin edit" and e[10] == 1]
+    assert 20 <= sum(not e[3] for e in edit) <= 31 and edit[-1][3], "Stale plugin measurement"
+    assert all(e[2] for e in edit), "The meters should keep displaying levels after an edit"
+    assert max(abs((measured-reference) - 20*math.log10(.5))
+               for measured,reference in zip(edit[-1][7:10],expected[3:])) < .005
     assert any(e[1] == "dry" and not e[3] for e in readings)
     settling = [e for e in readings if e[1] == "settling" and not e[3]]
     assert 20 <= len(settling) <= 31, ("gain settlement", len(settling))

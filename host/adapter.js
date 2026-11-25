@@ -2,7 +2,15 @@
 inlets = 3;
 outlets = 4; // vst~, wrapper events, stereo Drive, output stage
 const patch = this.patcher;
-const nativeHost = () => patch.getnamed("maxPlugin");
+const nativeHost = () => patch.getnamed(product.sdkHost ? "maxLookup" : "maxPlugin");
+function loadedName() {
+    const id = nativeHost().getattr("currentplug");
+    return Array.isArray(id) ? id[0] : id;
+}
+function lookupCommand(...args) {
+    if (product.sdkHost) nativeHost().message(...args);
+    else outlet(0, ...args);
+}
 const temp = "Tempfolder:/m4l-host-" + Date.now() + "-" + Math.floor(Math.random() * 0x100000000).toString(16);
 const exportPath = temp + "-export.vstpreset";
 const presetPath = temp + "-import.vstpreset";
@@ -14,11 +22,16 @@ let phase = "idle", state = "-", names = [], mapping = [], inverse = [];
 let attempts, reportedLatency = -1;
 const restoreError = "The plug-in could not restore its state from this Live Set.";
 let probeValue, probeReply, probePass;
-let autoGainEnabled = false, lastDrive, trimDisplay;
+let readingSlot = -1, readingValue;
+let autoGainEnabled = false, lastDrive, trimDisplay, restoredAutoTrim;
 const recallTask = new Task(importAndCheck, this);
 const inspectTask = new Task(inspect, this);
 const finishTask = new Task(finish, this);
-const latencyTask = new Task(function () { if (phase === "ready") outlet(0, "get", -10); }, this);
+let latencyCheckPending = false;
+const latencyTask = new Task(function () {
+    latencyCheckPending = false;
+    if (phase === "ready") outlet(0, "get", -10);
+}, this);
 const editorTask = new Task(checkEditorWindow, this);
 let editorRequested = false, closedRect = null, reportedRect = null, openingChecks = 0;
 
@@ -33,7 +46,7 @@ function encode(bytes) {
     return result;
 }
 function decode(text) {
-    if (!text || text.length > 349528 || text.length % 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(text)) throw Error("Invalid saved state.");
+    if (!text || text.length % 4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(text)) throw Error("Invalid saved state.");
     const bytes = [];
     for (let i = 0; i < text.length; i += 4) {
         let bits = 0;
@@ -80,7 +93,7 @@ function parsePreset(bytes) {
     if (at < 48 || tag(at,4) !== "List") throw Error("Invalid VST3 directory.");
     const count = integer(at+4,4);
     if (count > (bytes.length-at-8)/20) throw Error("Incomplete VST3 directory.");
-    let component, otherState = false;
+    let component;
     for (let i = 0; i < count; i++) {
         const ix = at + 8 + 20*i, name = tag(ix,4);
         const offset = integer(ix+4,8), length = integer(ix+12,8);
@@ -88,20 +101,22 @@ function parsePreset(bytes) {
         if (name === "Comp") {
             if (component || !length) throw Error("Invalid VST3 component state.");
             component = bytes.slice(offset, offset+length);
-        } else if (length && name !== "Info") otherState = true;
+        }
     }
     if (!component) throw Error("No VST3 component state.");
-    return {component, otherState};
+    return {component};
 }
 function readFile(path) {
     const f = new File(path, "read");
     try {
-        if (!f.isopen || f.eof <= 0 || f.eof > 262144) throw Error("The plug-in snapshot could not be read.");
-        return f.readbytes(f.eof);
+        if (!f.isopen || f.eof <= 0) throw Error("The plug-in snapshot could not be read.");
+        const bytes = f.readbytes(f.eof);
+        if (!bytes || bytes.length !== f.eof) throw Error("Incomplete plug-in snapshot.");
+        return bytes;
     } finally { f.close(); }
 }
 function setLatency(value) {
-    if (value === reportedLatency) return;
+    if (!Number.isInteger(value) || value < 0 || value === reportedLatency) return;
     reportedLatency = value;
     outlet(1, "latency", value);
 }
@@ -112,8 +127,10 @@ function fail(detail) {
     outlet(1, "loaderror", detail);
 }
 function load(encoded) {
+    const firstLoad = phase === "idle";
     endEditorSession();
     inspectTask.cancel(); finishTask.cancel(); recallTask.cancel(); latencyTask.cancel();
+    latencyCheckPending = false;
     outlet(3, "wet", 0); setLatency(0);
     phase = "discovering";
     state = String(encoded); attempts = 0;
@@ -121,16 +138,34 @@ function load(encoded) {
         autoGainEnabled = false;
         lastDrive = undefined;
         trimDisplay = undefined;
+        restoredAutoTrim = false;
     }
-    outlet(0, "unplug");
-    // A fresh name lookup is silent. Max may show a global confirmation dialog for scan.
-    outlet(0, "plug_vst3", product.name);
+    if (product.sdkHost) outlet(0, "release");
+    const current = loadedName();
+    if (!firstLoad && current) {
+        lookupCommand("disable", 1);
+        lookupCommand("drop");
+    }
+    // Max can already have restored this instance during Set loading.
+    // Retry always performs a fresh name lookup.
+    if (!firstLoad || current !== "C74_VST3:/" + product.name)
+        lookupCommand("plug_vst3", product.name);
     inspectTask.schedule(250);
 }
 function inspect() {
-    const id = nativeHost().getattr("currentplug");
+    const id = loadedName();
     if (!id && ++attempts < 12) { inspectTask.schedule(250); return; }
-    if (!id) { fail("Check that the VST3 is installed and available to Max."); return; }
+    if (!id) { fail("Install the VST3 in a standard VST3 folder so Max can find it."); return; }
+    if (product.sdkHost) {
+        if (id !== "C74_VST3:/" + product.name) { fail("Max did not resolve the expected Decapitator VST3."); return; }
+        // Keep this unconnected lookup disabled for the device lifetime. Dropping
+        // it while a Set is opening can stall Live inside Max's VST destructor.
+        lookupCommand("disable", 1);
+        phase = "restoring";
+        outlet(0, "loadstate", state);
+        return;
+    }
+    outlet(0, "disable", 0);
     // Max can resolve another format with the same display name. Confirm the
     // portable VST3 class ID from the vendor preset before enabling audio.
     try {
@@ -196,35 +231,57 @@ function finish() {
             fail(restoreError); return;
         }
     }
+    commitReady();
+}
+function commitReady() {
     phase = "ready";
     outlet(1, "ready");
-    // The restored preset is authoritative for Decapitator. Read its values for
-    // the panel and Live parameter displays without replaying the old controls.
+    if (phase !== "ready") return;
+    // Read the resulting values after the controller reconciles newer Live edits.
     if (product.restoreFromPlugin) {
-        if (gainParameters) showTrim(knownTrim);
         for (const index of mapping) outlet(0, "get", index);
+        if (restoredAutoTrim) showTrim(autoGainEnabled ? automaticTrim : unknownTrim);
     }
     outlet(0, "get", -10);
     outlet(3, "wet", 1);
 }
+function nativeReady() {
+    if (!product.sdkHost || phase !== "restoring") return;
+    mapping = product.parameters.map((_,i) => i+1);
+    inverse = []; mapping.forEach((index,i) => { inverse[index] = i; });
+    commitReady();
+}
+function nativeValue(index, value) { if (product.sdkHost) parameterChanged(index, value); }
+function nativeFailure(detail) { if (product.sdkHost) fail(detail); }
+function plugstate(token) { if (product.sdkHost && phase === "ready") outlet(1,"plugstate",token); }
+function stateerror(detail) { if (product.sdkHost) outlet(1,"stateerror",detail); }
+function nativeBankChanged() { if (product.sdkHost && editorRequested) snapshot(); }
+function nativeEditor(open) {
+    if (!product.sdkHost) return;
+    if (!Number(open)) { endEditorSession(); return; }
+    if (!editorRequested) { editorRequested = true; outlet(1,"editorWindow",1); }
+    editorTask.schedule(250);
+}
 function snapshot() {
     if (phase !== "ready") return;
+    if (product.sdkHost) { outlet(0,"snapshot"); return; }
     try {
         // Start from an empty destination so a failed write cannot return a previous snapshot.
         writeFile(exportPath, []);
         outlet(0, "write", exportPath);
-        const bytes = readFile(exportPath), chunks = parsePreset(bytes);
-        // The two current VST3s export only component state. In that case the stored
-        // symbol stays readable by v1.3, without a format conversion on Live Set save.
-        const completePreset = product.restoreFromPlugin || chunks.otherState;
-        outlet(1, "plugstate", completePreset ? "preset1_" + encode(bytes) : encode(chunks.component));
-    } catch (error) { post("Could not capture the plug-in state: " + error.message + "\n"); }
+        const bytes = readFile(exportPath);
+        parsePreset(bytes);
+        outlet(1, "plugstate", "preset1_" + encode(bytes));
+    } catch (error) { outlet(1, "stateerror", error.message); }
 }
 function showTrim(mode) {
     if (trimDisplay === mode) return;
     trimDisplay = mode;
     outlet(1, "autoTrim", mode);
 }
+// During import a get of OutputTrim can return the last manual value even
+// when the audible trim was computed by the plug-in.
+function restoredTrimSource(source) { restoredAutoTrim = Number(source) >= 1; }
 function observeAutoGain(slot, value) {
     if (!gainParameters) return;
     if (slot === gainParameters.drive) {
@@ -244,9 +301,21 @@ function parameterChanged(index, value) {
     if (slot === undefined || !Number.isFinite(value) || value < 0 || value > 1) return;
     if (phase === "restoring") { if (slot === restoreProbe) probeReply = value; return; }
     if (phase !== "ready") return;
+    if (slot === readingSlot) { readingValue = value; return; }
     observeAutoGain(slot, value);
     outlet(1, "edited", slot, value);
-    if (product.parameters[slot] === "Quality") latencyTask.schedule(30);
+    latencyAfterEdit(slot);
+}
+// A saved Live parameter may be one or more audio blocks newer than the vendor
+// bank. Query the restored processor before sending any corrective edit.
+function reconcile(slot, desired) {
+    if (phase !== "ready" || !mapping[slot]) return;
+    readingSlot = slot;
+    readingValue = undefined;
+    try { outlet(0, "get", mapping[slot]); }
+    finally { readingSlot = -1; }
+    if (!Number.isFinite(readingValue)) { fail(restoreError); return; }
+    if (Math.abs(readingValue - desired) > 1e-6) param(slot, desired);
 }
 function anything() {
     if (inlet === 1 && phase === "parameters") names.push(messagename);
@@ -271,7 +340,7 @@ function param(slot, value) {
         observeAutoGain(slot, value);
     }
     outlet(0, [mapping[slot], value]);
-    if (product.parameters[slot] === "Quality") latencyTask.schedule(30);
+    latencyAfterEdit(slot);
 }
 // v8.codebox handles "open" itself. Translate only at the vst~ outlet.
 function editorRect() {
@@ -287,6 +356,7 @@ function endEditorSession() {
 }
 function checkEditorWindow() {
     if (!editorRequested) return;
+    if (product.sdkHost) { outlet(0,"editorstate"); return; }
     const rect = editorRect();
     // These editors revert to the pre-open rectangle on close. Sample it per
     // instance so window placement, scale and monitor choice need no constants.
@@ -299,6 +369,7 @@ function checkEditorWindow() {
 }
 function openPlugin() {
     if (phase !== "ready" || editorRequested) return;
+    if (product.sdkHost) { outlet(0,"showeditor"); return; }
     closedRect = editorRect();
     outlet(0, "open");
     editorRequested = true;
@@ -308,14 +379,32 @@ function openPlugin() {
 }
 function closePlugin() {
     if (!editorRequested) return;
+    if (product.sdkHost) { outlet(0,"hideeditor"); return; }
     outlet(0, "wclose");
     endEditorSession();
 }
 function drive(db) { outlet(2, "output", db); }
+function matchrevision(revision) { outlet(3, "revision", revision); }
 function output(db) { outlet(3, "output", db); }
 function metering(token) {
     outlet(3, "metering", token);
     if (product.restoreFromPlugin && token % 2 === 1) refreshLatency();
 }
-function refreshLatency() { if (phase === "ready") latencyTask.schedule(50); }
+function refreshLatency() {
+    if (phase !== "ready") return;
+    outlet(0, "get", -10);
+    scheduleLatencyCheck();
+}
+function latencyAfterEdit(slot) {
+    if (product.sdkHost) return; // The native processor handles VST3 latency notifications.
+    if (product.latencyParameters?.includes(product.parameters[slot])) refreshLatency();
+    else scheduleLatencyCheck();
+}
+function scheduleLatencyCheck() {
+    // A processor may apply the change on a later audio block. Several automated
+    // writes share one read. An ongoing gesture must not postpone it indefinitely.
+    if (latencyCheckPending) return;
+    latencyCheckPending = true;
+    latencyTask.schedule(50);
+}
 function notifydeleted() { editorTask.cancel(); inspectTask.cancel(); finishTask.cancel(); recallTask.cancel(); latencyTask.cancel(); }

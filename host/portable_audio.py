@@ -37,16 +37,17 @@ History remaining(0);
 """
     if post:
         code += "Param wet(0);\n"
-    code += """
+    limit = 48 if post else 24  # Post combines the manual trim and inverse Pre Gain.
+    code += f"""
 desired = target;
 step = stepSize;
 left = remaining;
 value = current;
-if (targetDb != previousDb) {
-    desired = pow(10, clamp(targetDb, -24, 24) / 20);
+if (targetDb != previousDb) {{
+    desired = pow(10, clamp(targetDb, -{limit}, {limit}) / 20);
     left = max(1, floor(samplerate * 0.005 + 0.5));
     step = (desired - value) / left;
-}
+}}
 """
     advance = "left > 0 && wet != 0" if post else "left > 0"
     code += f"""if ({advance}) {{
@@ -104,6 +105,13 @@ def gain_stage(post=False):
 
 def install_audio(patch):
     boxes = {entry["box"]["id"]: entry["box"] for entry in patch["boxes"]}
+    if "audioStatus" not in boxes:
+        source = next(key for key, box in boxes.items() if box.get("text") == "plugin~")
+        _box(patch, "audioStatus", "newobj", 710, 1180, text="dspstate~")
+        _box(patch, "latencyRefresh", "message", 710, 1220, text="refreshLatency")
+        _wire(patch, source, 0, "audioStatus", 0)
+        _wire(patch, "audioStatus", 1, "latencyRefresh", 0)
+        _wire(patch, "latencyRefresh", 0, "maxHostControl", 0)
     for name, post in (("driveRamp", False), ("wrapperOutput", True)):
         inputs = 4 if post else 2
         boxes[name].update(text="p postGainAndMeter" if post else "p preGain",

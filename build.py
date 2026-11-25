@@ -1,6 +1,7 @@
 """Package the portable Max patches and scripts into standalone Live devices."""
 import argparse
 import json
+import sys
 from pathlib import Path
 import re
 import struct
@@ -10,7 +11,7 @@ import time
 from host.portable_audio import install_audio
 
 ROOT = Path(__file__).resolve().parent
-WRAPPER_VERSION = "1.5"
+WRAPPER_VERSION = "2.0-b1"
 AMXD_HEADER = bytes.fromhex("616d706604000000616161616d657461040000000700000070746368")
 
 
@@ -58,11 +59,14 @@ def resources_for(config):
         yield name, b"TEXT", text.encode("utf-8")
 
 
-def build_device(device, output):
+def build_device(device, output, decapitator_host="portable"):
     config = json.loads((device / "device.json").read_text(encoding="utf-8"))
     patch = json.loads((device / "device.maxpat").read_text(encoding="utf-8"))["patcher"]
     boxes = {row["box"].get("varname"): row["box"] for row in patch["boxes"]}
     product = config["product"]
+    native = device.name == "decapitator" and decapitator_host == "macos"
+    if native:
+        product["sdkHost"] = True
     controller = (device / "controller.js").read_text(encoding="utf-8")
     definitions = device / "parameters.json"
     if definitions.exists():
@@ -71,20 +75,28 @@ def build_device(device, output):
         controller = "const parameters = " + json.dumps(parameters) + ";\n" + controller
     else:
         controller += '\npluginEditorMessage = "openPlugin";'
-    boxes["ctrl"]["code"] = "\n".join((controller, (ROOT / "shared/missing-plugin.js").read_text(encoding="utf-8"),
+    boxes["ctrl"]["code"] = "\n".join((controller, (ROOT / "shared/device-latency.js").read_text(encoding="utf-8"),
+                                      (ROOT / "shared/missing-plugin.js").read_text(encoding="utf-8"),
                                       (ROOT / "shared/meter-controls.js").read_text(encoding="utf-8")))
     boxes["maxHostControl"]["code"] = ("const product = " + json.dumps(product) + ";\n"
                                         + (ROOT / "host/adapter.js").read_text(encoding="utf-8"))
     path = output / (config["name"] + ".amxd")
     install_audio(patch)
-    freeze(patch, path, resources_for(config))
+    resources = list(resources_for(config))
+    if native:
+        from devices.decapitator.native.package import install
+        resources.extend(install(patch))
+    freeze(patch, path, resources)
     print(path)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("devices", nargs="*", help="Device directory names (default: all)")
-    parser.add_argument("--output", type=Path, default=ROOT / "dist")
+    parser.add_argument("--output", type=Path, default=ROOT / "dist" / "v2")
+    parser.add_argument("--decapitator-host", choices=("portable", "macos"),
+                        default="macos" if sys.platform == "darwin" else "portable",
+                        help="macOS SDK processor or portable vst~ comparison build")
     args = parser.parse_args()
     devices = {p.parent.name: p.parent for p in sorted((ROOT / "devices").glob("*/device.json"))}
     selected = args.devices or list(devices)
@@ -92,4 +104,4 @@ if __name__ == "__main__":
         parser.error("Available devices: " + ", ".join(devices))
     args.output.mkdir(parents=True, exist_ok=True)
     for name in selected:
-        build_device(devices[name], args.output)
+        build_device(devices[name], args.output, args.decapitator_host)
